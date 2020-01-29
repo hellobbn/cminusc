@@ -168,7 +168,7 @@ void analyzer(char* input_file_name, char* output_file_name) {
     prev_line = yylineno;
 
     char input_path[256] = "./testcase/";
-    char output_path[256] = "./testout/tokens";
+    char output_path[256] = "./testout/lexer/";
 
     strcat(input_path, input_file_name);
     strcat(output_path, output_file_name);

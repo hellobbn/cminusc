@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-extern int fileno (FILE* __stream) __THROW __wur;
-
 #ifndef YYTOKENTYPE
 #define YYTOKENTYPE
 
@@ -45,9 +43,6 @@ typedef enum cminus_token_type {
 } Token;
 
 #endif /* YYTOKENTYPE */
-
-const char* strtoken(Token t);
-
 
 int lex_main(int argc, char** argv);
 #endif /* LEXER_H */

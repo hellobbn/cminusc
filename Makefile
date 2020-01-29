@@ -9,6 +9,7 @@ BUILD_DIR 		= build
 
 ## test
 TEST_DIR		= test_src
+TEST_OUT_DIR	= testout
 
 ## helper
 HELPER_SRC_DIR	= helper
@@ -35,6 +36,7 @@ LEXER_C_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${LEXER_C_FILE}}
 LEXER_OBJ 		= ${LEXER_C_OBJ} ${LEXER_FLEX_OBJ}
 
 ### test
+LEXER_TEST_OUT_DIR = ${TEST_OUT_DIR}/${LEXER_SRC_DIR}
 LEXER_TEST_SRC	= ${TEST_DIR}/lex_test.c
 LEXER_TEST_OBJ	= ${LEXER_OUT_DIR}/lex_test.o
 LEXER_TEST_OUT	= ${BUILD_DIR}/lex_test
@@ -74,6 +76,8 @@ prepare:
 	mkdir -p ${BUILD_DIR}
 	mkdir -p ${LEXER_OUT_DIR}
 	mkdir -p ${HELPER_OUT_DIR}
+	mkdir -p ${LEXER_TEST_OUT_DIR}
 
 clean:
 	rm -rf ${BUILD_DIR}
+	rm -rf ${TEST_OUT_DIR}
