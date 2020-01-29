@@ -2,7 +2,7 @@
 
 ## generic
 CC 				= gcc
-C_FLAG 			= -Iinclude
+C_FLAG 			= -Iinclude -Wall -Wextra
 
 ## build dir
 BUILD_DIR 		= build

@@ -1,6 +1,7 @@
 // helper functions
 
 #include "helper.h"
+#include "lexer.h"
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,4 +48,53 @@ int getAllTestCases(char name[][256]) {
     }
 
     return files_count;
+}
+
+// pre-defined token string
+char* tokens[] = {
+    "ERROR",
+    "ADD",
+    "SUB",
+    "MUL",
+    "DIV",
+    "LT",
+    "LTE",
+    "GT",
+    "GTE",
+    "EQ",
+    "NEQ",
+    "ASSIGN",
+    "SEMICOLON",
+    "COMMA",
+    "L_PARENTHESE",
+    "R_PARENTHESE",
+    "L_BRACKET",
+    "R_BRACKET",
+    "L_BRACE",
+    "R_BRACE",
+    "ELSE",
+    "IF",
+    "INT",
+    "RETURN",
+    "VOID",
+    "WHILE",
+    "IDENTIFIER",
+    "NUMBER",
+    "ARRAY",
+    "LETTER",
+    "EOL",
+    "COMMENT",
+    "BLANK"
+};
+
+/** token_to_str():
+ *  given a token number, converts it to string and return it.
+ * 
+ *  @param token the token
+ *  @return the string
+ */
+char* token_to_str(int token) {
+    int i = -(token + 1);
+
+    return tokens[i];
 }

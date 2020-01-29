@@ -24,5 +24,6 @@
 
 // helper functions
 int getAllTestCases(char name[][256]);
+char* token_to_str(int token);
 
 #endif

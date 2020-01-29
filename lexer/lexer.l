@@ -27,7 +27,7 @@ identifierPattern [a-zA-Z][a-zA-Z]*
 
 %%
 
-commentPattern {
+{commentPattern} {
     return tok_comment;
 }
 
@@ -135,7 +135,7 @@ commentPattern {
     return tok_while;
 }
 
-identifierPattern {
+{identifierPattern} {
     return tok_identifier;
 }
 
@@ -186,7 +186,7 @@ void analyzer(char* input_file_name, char* output_file_name) {
     // initialize scanner pointer
     pos_start = 1;
     pos_end = 1;
-    while(token = yylex()) {
+    while((token = yylex())) {
         lines += yylineno - prev_line;
         int i;
         for(i = 0; i < yyleng; ++ i) {
@@ -208,10 +208,10 @@ void analyzer(char* input_file_name, char* output_file_name) {
             case tok_blank:
                 break;
             case tok_number:
-                fprintf(fp, "%d\t%d\t%d\t%d\t%d\n",atoi(yytext), token, lines, pos_start, pos_end);
+                fprintf(fp, "%d\t%s\t%d\t%d\t%d\n",atoi(yytext), token_to_str(token), lines, pos_start, pos_end);
                 break;
             default:
-                fprintf(fp, "%s\t%d\t%d\t%d\t%d\n",yytext, token, lines, pos_start, pos_end);
+                fprintf(fp, "%s\t%s\t%d\t%d\t%d\n",yytext, token_to_str(token), lines, pos_start, pos_end);
         }
 
         prev_line = yylineno;
