@@ -2,7 +2,8 @@
 
 ## generic
 CC 				= gcc
-C_FLAG 			= -Iinclude -Wall -Wextra
+C_FLAG 			= -Iinclude -Wall -Wextra -Wno-unused-parameter
+C_FLAG 		   += -Wno-unused-function
 
 ## build dir
 BUILD_DIR 		= build
