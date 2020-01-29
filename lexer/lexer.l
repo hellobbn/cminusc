@@ -143,10 +143,6 @@ identifierPattern [a-zA-Z][a-zA-Z]*
     return tok_number;
 }
 
-[a-zA-Z] {
-    return tok_letter;
-}
-
 \n {
     return tok_eol;
 }
