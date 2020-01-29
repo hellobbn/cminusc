@@ -41,8 +41,36 @@ LEXER_TEST_SRC	= ${TEST_DIR}/lex_test.c
 LEXER_TEST_OBJ	= ${LEXER_OUT_DIR}/lex_test.o
 LEXER_TEST_OUT	= ${BUILD_DIR}/lex_test
 
+## syntax tree
+### dir
+SYNTREE_SRC_DIR	= syntax_tree
+SYNTREE_OUT_DIR	= ${BUILD_DIR}/${SYNTREE_SRC_DIR}
 
-all: prepare lex_test
+### source
+SYNTREE_C_FILE 	= ${wildcard ${SYNTREE_SRC_DIR}/*.c}
+
+### obj
+SYNTREE_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${SYNTREE_C_FILE}}
+
+### test
+SYNTREE_TEST_SRC	= ${TEST_DIR}/syntree_test.c
+SYNTREE_TEST_OBJ 	= ${SYNTREE_OUT_DIR}/syntree_test.o
+SYNTREE_TEST_OUT	= ${BUILD_DIR}/syntree_test
+
+all: prepare lex_test syntree_test
+
+## Syntree rules
+
+### syntree test
+syntree_test: ${SYNTREE_TEST_OBJ} ${SYNTREE_OBJ}
+	${CC} ${C_FLAG} ${SYNTREE_TEST_OBJ} ${SYNTREE_OBJ} -o ${SYNTREE_TEST_OUT}
+
+${SYNTREE_TEST_OBJ}: ${SYNTREE_TEST_SRC}
+	${CC} ${C_FLAG} -c -o ${SYNTREE_TEST_OBJ} ${SYNTREE_TEST_SRC}
+
+### syntree
+${SYNTREE_OBJ}: ${BUILD_DIR}/%.o : %.c
+	${CC} ${C_FLAG} -c -o $@ $<
 
 ## Flex rules
 
