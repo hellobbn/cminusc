@@ -32,7 +32,7 @@ struct syn_tree* syntax_tree;
  * Token definitions
  * ************************************
  */
-%token <pnode> error tok_add tok_sub tok_mul tok_div tok_lt tok_lte
+%token <pnode> tok_error tok_add tok_sub tok_mul tok_div tok_lt tok_lte
 %token <pnode> tok_gt tok_gte tok_eq tok_neq tok_assign tok_semicolon
 %token <pnode> tok_comma tok_l_parenthese tok_r_parenthese tok_l_bracket
 %token <pnode> tok_r_bracket tok_l_brace tok_r_brace tok_else tok_if tok_int tok_return
@@ -97,7 +97,7 @@ var-declaration: type-specifier tok_identifier tok_semicolon
         synTreeNodeAddChild($$, $2);
         synTreeNodeAddChild($$, $3);
     }
-    | type-specifier tok_identifier tok_l_bracket tok_number r-tok_l_bracket tok_semicolon
+    | type-specifier tok_identifier tok_l_bracket tok_number tok_r_bracket tok_semicolon
     {
         $$ = newSynTreeNode("var-declaration");
         synTreeNodeAddChild($$, $1);
@@ -256,7 +256,7 @@ selection-stmt: tok_if tok_l_parenthese expression tok_r_parenthese statement
         synTreeNodeAddChild($$, $3);
         synTreeNodeAddChild($$, $4);
         synTreeNodeAddChild($$, $5);
-        synTreeNodeAddChild($$. $6);
+        synTreeNodeAddChild($$, $6);
         synTreeNodeAddChild($$, $7);
     };
 
@@ -311,7 +311,7 @@ var: tok_identifier
         synTreeNodeAddChild($$, $4);
     };
 
-simple-expression: additive-expression relop additive
+simple-expression: additive-expression relop additive-expression
     {
         $$ = newSynTreeNode("simple-expression");
         synTreeNodeAddChild($$, $1);
@@ -321,7 +321,7 @@ simple-expression: additive-expression relop additive
     | additive-expression
     {
         $$ = newSynTreeNode("simple-expression");
-        newSynTreeNode($$, $1);
+        synTreeNodeAddChild($$, $1);
     };
 
 relop: tok_lte
@@ -471,7 +471,7 @@ void yyerror(const char* s) {
 // test function for parser
 void parser(const char* input_file_name, const char* output_file_name) {
     // initialize syntax tree
-    syntax_tree = newSynTree(void);
+    syntax_tree = newSynTree();
 
     // initialize input and output path
     char input_path[256] = "./testcase/";
@@ -485,7 +485,7 @@ void parser(const char* input_file_name, const char* output_file_name) {
         PANIC("Open file %s failed.\n", input_path);
     }
 
-    yyrestart(yyin);
+    //yyrestart(yyin);
 
     DEBUG_PRINT("Parser start for %s\n", input_file_name);
 

@@ -11,8 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lexer.h"
+#include "parser.tab.h"
 #include "helper.h"
+#include "syntax_tree.h"
 //#include "syntax_tree.h"
 
 int file_count = 0;
@@ -20,6 +21,10 @@ int lines;
 int pos_start;
 int pos_end;
 int prev_line;
+
+#ifdef LEX_TEST
+#warning "itit"
+#endif
 %}
 
 commentPattern "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
@@ -28,131 +33,221 @@ identifierPattern [a-zA-Z][a-zA-Z]*
 %%
 
 {commentPattern} {
+#ifdef LEX_TEST
     return tok_comment;
+#endif
 }
 
 "[]" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("[]");
+#endif
     return tok_array;
 }
 
 "+" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("+");
+#endif
     return tok_add;
 }
 
 "-" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("-");
+#endif
     return tok_sub;
 }
 
 "*" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("*");
+#endif
     return tok_mul;
 }
 
 "/" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("/");
+#endif
     return tok_div;
 }
 
 "<" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("<");
+#endif
     return tok_lt;
 }
 
 "<=" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("<=");
+#endif
     return tok_lte;
 }
 
 ">" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(">");
+#endif
     return tok_gt;
 }
 
 ">=" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(">=");
+#endif
     return tok_gte;
 }
 
 "==" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("==");
+#endif
     return tok_eq;
 }
 
 "!=" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("!=");
+#endif
     return tok_neq;
 }
 
 "=" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("=");
+#endif
     return tok_assign;
 }
 
 ";" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(";");
+#endif
     return tok_semicolon;
 }
 
 "," {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(",");
+#endif
     return tok_comma;
 }
 
 "(" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("(");
+#endif
     return tok_l_parenthese;
 }
 
 ")" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(")");
+#endif
     return tok_r_parenthese;
 }
 
 "[" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("[");
+#endif
     return tok_l_bracket;
 }
 
 "]" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("]");
+#endif
     return tok_r_bracket;
 }
 
 "{" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("{");
+#endif
     return tok_l_brace;
 }
 
 "}" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("}");
+#endif
     return tok_r_brace;
 }
 
 "else" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("else");
+#endif
     return tok_else;
 }
 
 "if" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("if");
+#endif
     return tok_if;
 }
 
 "int" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("int");
+#endif
     return tok_int;
 }
 
 "return" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("return");
+#endif
     return tok_return;
 }
 
 "void" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("void");
+#endif
     return tok_void;
 }
 
 "while" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("while");
+#endif
     return tok_while;
 }
 
 {identifierPattern} {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(yytext);
+#endif
     return tok_identifier;
 }
 
 [0-9][0-9]* {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(yytext);
+#endif
     return tok_number;
 }
 
 \n {
+#ifdef LEX_TEST
     return tok_eol;
+#endif
 }
 
 [" "\t] {
+#ifdef LEX_TEST
     return tok_blank;
+#endif
 }
 
 . {
-    return error;
+    return tok_error;
 }
 
 %%
@@ -197,7 +292,7 @@ void analyzer(char* input_file_name, char* output_file_name) {
         switch(token) {
             case tok_eol:
                 break;
-            case error:
+            case tok_error:
                 fprintf(fp, "[ERR]: unable to analysize %s at %d line, from %d to %d\n", yytext, lines, pos_start, pos_end);
                 break;
             case tok_comment:

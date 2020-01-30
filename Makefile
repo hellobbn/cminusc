@@ -2,11 +2,12 @@
 
 ## generic
 CC 				= gcc
-C_FLAG 			= -Iinclude -Wall -Wextra -Wno-unused-parameter
+C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
 C_FLAG 		   += -Wno-unused-function
 
 ## build dir
 BUILD_DIR 		= build
+GENERATED_DIR	= ${BUILD_DIR}/generated
 
 ## test
 TEST_DIR		= test_src
@@ -37,10 +38,12 @@ LEXER_C_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${LEXER_C_FILE}}
 LEXER_OBJ 		= ${LEXER_C_OBJ} ${LEXER_FLEX_OBJ}
 
 ### test
+LEXER_FLEX_TEST_OBJ = ${LEXER_OUT_DIR}/lex_flex_test.o
 LEXER_TEST_OUT_DIR = ${TEST_OUT_DIR}/${LEXER_SRC_DIR}
 LEXER_TEST_SRC	= ${TEST_DIR}/lex_test.c
 LEXER_TEST_OBJ	= ${LEXER_OUT_DIR}/lex_test.o
 LEXER_TEST_OUT	= ${BUILD_DIR}/lex_test
+LEXER_TEST_CFLAG	= -DLEX_TEST
 
 ## syntax tree
 ### dir
@@ -58,7 +61,55 @@ SYNTREE_TEST_SRC	= ${TEST_DIR}/syntree_test.c
 SYNTREE_TEST_OBJ 	= ${SYNTREE_OUT_DIR}/syntree_test.o
 SYNTREE_TEST_OUT	= ${BUILD_DIR}/syntree_test
 
-all: prepare lex_test syntree_test
+## parser
+
+### the parser
+BISON_EXEC		= bison
+BISON_FLAGS		= -d -Wno-conflicts-sr
+PARSER 			= parser
+
+### dir
+PARSER_SRC_DIR	= parser
+PARSER_OUT_DIR	= ${BUILD_DIR}/${PARSER_SRC_DIR}
+PARSER_HEADER	= ${GENERATED_DIR}/${PARSER}.tab.h
+
+### source
+BISON_IN_SOURCE	= ${PARSER_SRC_DIR}/${PARSER}.y
+BISON_OUT_SOURCE = ${PARSER_OUT_DIR}/${PARSER}.tab.c
+
+### obj
+PARSER_BISON_OBJ	= ${PARSER_OUT_DIR}/${PARSER}.o
+
+### test
+PARSER_TEST_SRC	= ${TEST_DIR}/parser_test.c
+PARSER_TEST_OBJ	= ${PARSER_OUT_DIR}/parser_test.o
+PARSER_TEST_OUT	= ${BUILD_DIR}/parser_test
+
+## 
+
+all: prepare lex_test syntree_test bison_test
+
+## parser rules
+
+### bison test
+bison_test: ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ}
+	${CC} ${C_FLAG} ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} -o ${PARSER_TEST_OUT}
+
+${PARSER_TEST_OBJ}: ${PARSER_TEST_SRC}
+	${CC} ${C_FLAG} -c -o ${PARSER_TEST_OBJ} ${PARSER_TEST_SRC} 
+
+### bison generate
+${PARSER_BISON_OBJ}: ${BISON_OUT_SOURCE}
+	${CC} ${C_FLAG} -c -o ${PARSER_BISON_OBJ} ${BISON_OUT_SOURCE}
+
+${BISON_OUT_SOURCE}: bison_compile
+	mv ${PARSER}.tab.c ${BISON_OUT_SOURCE}
+
+${PARSER_HEADER}: bison_compile
+	mv ${PARSER}.tab.h ${PARSER_HEADER}
+
+bison_compile: ${BISON_IN_SOURCE}
+	${BISON_EXEC} ${BISON_FLAGS} ${BISON_IN_SOURCE}
 
 ## Syntree rules
 
@@ -77,19 +128,21 @@ ${SYNTREE_OBJ}: ${BUILD_DIR}/%.o : %.c
 
 ### Flex test 
 
-lex_test: ${LEXER_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ}
-	${CC} ${C_FLAG} ${LEXER_OBJ} ${LEXER_TEST_OBJ}  ${HELPER_OBJ} -o ${LEXER_TEST_OUT} 
+lex_test: ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_OBJ}
+	${CC} ${C_FLAG} ${LEXER_C_OBJ}  ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_OBJ} -o ${LEXER_TEST_OUT} 
 
 ${LEXER_TEST_OBJ}: ${LEXER_TEST_SRC}
 	${CC} ${C_FLAG} -c -o ${LEXER_TEST_OBJ} ${LEXER_TEST_SRC}
 
+${LEXER_FLEX_TEST_OBJ}: flex_comp ${PARSER_HEADER}
+	${CC} ${C_FLAG} ${LEXER_TEST_CFLAG} -c -o ${LEXER_FLEX_TEST_OBJ} ${LEXER_FLEX_OUT}
 
 ### Flex
 
 ${LEXER_C_OBJ}: ${BUILD_DIR}/%.o: %.c
 	${CC} ${C_FLAG} -c -o $@ $<
 
-${LEXER_FLEX_OBJ}: flex_comp
+${LEXER_FLEX_OBJ}: flex_comp ${PARSER_HEADER}
 	${CC} ${C_FLAG} -c -o ${LEXER_FLEX_OBJ} ${LEXER_FLEX_OUT}
 
 flex_comp:
@@ -106,6 +159,9 @@ prepare:
 	mkdir -p ${LEXER_OUT_DIR}
 	mkdir -p ${HELPER_OUT_DIR}
 	mkdir -p ${LEXER_TEST_OUT_DIR}
+	mkdir -p ${GENERATED_DIR}
+	mkdir -p ${PARSER_OUT_DIR}
+	mkdir -p ${SYNTREE_OUT_DIR}
 
 clean:
 	rm -rf ${BUILD_DIR}
