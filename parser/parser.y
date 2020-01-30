@@ -187,6 +187,8 @@ local-declarations: local-declarations var-declaration
     {
         $$ = newSynTreeNode("local-declarations");
         // empty here
+        struct tree_node* tmp = newSynTreeNode("epsilon");
+        synTreeNodeAddChild($$, tmp);
     };
 
 statement-list: statement-list statement
@@ -199,6 +201,8 @@ statement-list: statement-list statement
     {
         $$ = newSynTreeNode("statement-list");
         // empty here
+        struct tree_node* tmp = newSynTreeNode("epsilon");
+        synTreeNodeAddChild($$, tmp);
     };
 
 statement: expression-stmt
@@ -444,6 +448,8 @@ args: arg-list
     {
         $$ = newSynTreeNode("args");
         // empty here
+        struct tree_node* tmp = newSynTreeNode("epsilon");
+        synTreeNodeAddChild($$, tmp);
     };
 
 arg-list: arg-list tok_comma expression
