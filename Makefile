@@ -81,6 +81,7 @@ BISON_OUT_SOURCE = ${PARSER_OUT_DIR}/${PARSER}.tab.c
 PARSER_BISON_OBJ	= ${PARSER_OUT_DIR}/${PARSER}.o
 
 ### test
+PARSER_TEST_OUT_DIR	= ${TEST_OUT_DIR}/${PARSER_SRC_DIR}
 PARSER_TEST_SRC	= ${TEST_DIR}/parser_test.c
 PARSER_TEST_OBJ	= ${PARSER_OUT_DIR}/parser_test.o
 PARSER_TEST_OUT	= ${BUILD_DIR}/parser_test
@@ -159,6 +160,7 @@ prepare:
 	mkdir -p ${LEXER_OUT_DIR}
 	mkdir -p ${HELPER_OUT_DIR}
 	mkdir -p ${LEXER_TEST_OUT_DIR}
+	mkdir -p ${PARSER_TEST_OUT_DIR}
 	mkdir -p ${GENERATED_DIR}
 	mkdir -p ${PARSER_OUT_DIR}
 	mkdir -p ${SYNTREE_OUT_DIR}

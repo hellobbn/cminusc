@@ -21,10 +21,6 @@ int lines;
 int pos_start;
 int pos_end;
 int prev_line;
-
-#ifdef LEX_TEST
-#warning "itit"
-#endif
 %}
 
 commentPattern "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
