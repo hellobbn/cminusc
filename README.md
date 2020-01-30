@@ -7,7 +7,7 @@ This is a re-mastered project for Compiler Principle @ USTC 2019 Fall.
 ## A. roadmap
 
 - [x] Lexer (flex)
-- [ ] Parser (bison)
+- [x] Parser (bison)
 - [ ] llvm code gen
 
 ## B. build
