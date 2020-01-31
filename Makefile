@@ -86,9 +86,15 @@ PARSER_TEST_SRC	= ${TEST_DIR}/parser_test.c
 PARSER_TEST_OBJ	= ${PARSER_OUT_DIR}/parser_test.o
 PARSER_TEST_OUT	= ${BUILD_DIR}/parser_test
 
-## 
+## All Dir
+DIRS = ${BUILD_DIR} ${LEXER_OUT_DIR} ${HELPER_OUT_DIR} ${LEXER_TEST_OUT_DIR} \
+       ${PARSER_TEST_OUT_DIR} ${GENERATED_DIR} ${PARSER_OUT_DIR} ${SYNTREE_OUT_DIR}
 
 all: prepare lex_test syntree_test bison_test
+	$(info )
+	$(info ----------------------------)
+	$(info All Done)
+	$(info ----------------------------)
 
 ## parser rules
 
@@ -156,14 +162,7 @@ ${HELPER_OBJ}: ${BUILD_DIR}/%.o: %.c
 	${CC} ${C_FLAG} -c -o $@ $<
 
 prepare:
-	mkdir -p ${BUILD_DIR}
-	mkdir -p ${LEXER_OUT_DIR}
-	mkdir -p ${HELPER_OUT_DIR}
-	mkdir -p ${LEXER_TEST_OUT_DIR}
-	mkdir -p ${PARSER_TEST_OUT_DIR}
-	mkdir -p ${GENERATED_DIR}
-	mkdir -p ${PARSER_OUT_DIR}
-	mkdir -p ${SYNTREE_OUT_DIR}
+	mkdir -p ${DIRS}
 
 clean:
 	rm -rf ${BUILD_DIR}
