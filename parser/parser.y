@@ -475,6 +475,7 @@ void yyerror(const char* s) {
 }
 
 // test function for parser
+// FIXME: this does not match the extern defined in syntax_tree.hpp
 void parser(const char* input_file_name, const char* output_file_name) {
     // initialize syntax tree
     syntax_tree = newSynTree();
