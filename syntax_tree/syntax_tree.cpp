@@ -20,6 +20,10 @@ void syntax_tree::run_visitor(syntax_tree_visitor &visitor) {
     root->accept(visitor);
 }
 
+/** syntax_tree:
+ *  construct a syntax tree class from a given C syn_tree
+ *  using the function: transform_node_iter().
+ */
 syntax_tree::syntax_tree(struct syn_tree *tree) {
     if (tree == nullptr) {
         PANIC("Empty input tree!");
@@ -35,35 +39,42 @@ syntax_tree::syntax_tree(struct syn_tree *tree) {
 struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
     if (STR_EQ(n->name, "program")) {
         // it is a program
+        // program -> declaration-list
+        // declaration-list -> declaration-list declaration | declaration
+
         auto node = new syntax_program();
 
         std::stack<struct tree_node *> s;
 
-        auto list_ptr = n->children[0];
-        while (list_ptr->child_num == 2) {
-            s.push(list_ptr->children[1]);
+        auto list_ptr = n->children[0];    // declaration-list
+        while (list_ptr->child_num == 2) { // while : list dec
+            s.push(list_ptr->children[1]); // fastforward
             list_ptr = list_ptr->children[0];
         }
         s.push(list_ptr->children[0]);
 
         while (!s.empty) {
+            // transform declaration
             auto child_node =
                 static_cast<syntax_declaration *>(transform_node_iter(s.top()));
-
             auto child_node_shared =
                 std::shared_ptr<syntax_declaration>(child_node);
             node->declarations.push_back(child_node_shared);
+
             s.pop();
         }
         return node;
     } else if (STR_EQ(n->name, "declaration")) {
+        // declaration -> var-declaration | fun-declaration
         return transform_node_iter(n->children[0]);
     } else if (STR_EQ(n->name, "var-declaration")) {
+        // var-declaration -> type-specifier `ID`; | type-specifier `ID` `[`
+        // `NUM` `]`
         auto node = new syntax_var_declaration();
         node->type = Type_int;
-        if (n->child_num == 3) {
+        if (n->child_num == 3) { // int a;
             node->id = n->children[1]->name;
-        } else if (n->child_num == 6) {
+        } else if (n->child_num == 6) { // int a[2];
             node->id = n->children[1]->name;
             int num = std::stoi(n->children[3]->name);
             auto num_node = std::make_shared<syntax_num>();
@@ -74,6 +85,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         }
         return node;
     } else if (STR_EQ(n->name, "fun-declaration")) {
+        // fun-declaration → type-specifier `ID` `(`params`)` compound-stmt
         auto node = new syntax_fun_declaration();
         if (STR_EQ(n->children[0]->children[0]->name, "int")) {
             node->type = Type_int;
@@ -82,19 +94,23 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
             // no error handling here
         }
 
-        node->id = n->children[1]->name;
+        node->id = n->children[1]->name; // id
 
+        // iterate through parameters
+        // params → param-list | `void`
+        // param-list → param-list , param | param
         std::stack<struct tree_node *> s;
         auto list_ptr = n->children[3]->children[0];
-        if (list_ptr->child_num != 0) {
-            if (list_ptr->child_num == 3) {
+        if (list_ptr->child_num != 0) {     // is this param-list?
+            if (list_ptr->child_num == 3) { // still need to go deeper?
                 while (list_ptr->child_num == 3) {
-                    s.push(list_ptr->children[2]);
-                    list_ptr = list_ptr->children[0];
+                    s.push(list_ptr->children[2]);    // push param
+                    list_ptr = list_ptr->children[0]; // go deeper
                 }
             }
             s.push(list_ptr->children[0]);
 
+            // process param
             while (!s.empty()) {
                 auto child_node =
                     static_cast<syntax_param *>(transform_node_iter(s.top));
@@ -112,6 +128,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         node->compound_stmt = std::shared_ptr<syntax_compound_stmt>(stmt_node);
         return node;
     } else if (STR_EQ(n->name, "param")) {
+        // param → type-specifier `ID` | type-specifier `ID` `[]`
         auto node = new syntax_param();
         node->type = Type_int;
         node->id = n->children[1]->name;
@@ -122,10 +139,12 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "compound-stmt")) {
+        // compound-stmt → `{` local-declarations statement-list `}`
+        // local-declarations → local-declarations var-declaration | empty
         auto node = new syntax_compound_stmt();
 
-        if (n->children[1]->child_num == 2) {
-            auto list_ptr = n->children[1];
+        if (n->children[1]->child_num == 2) { // local -> local var
+            auto list_ptr = n->children[1];   // local-declarations
             std::stack<struct tree_node *> s;
             while (list_ptr->child_num == 2) {
                 s.push(list_ptr->children[1]);
@@ -163,8 +182,11 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "statement")) {
+        // statement → expression-stmt | compound-stmt| selection-stmt
+        // | iteration-stmt | return-stmt
         return transform_node_iter(n->children[0]);
     } else if (STR_EQ(n->name, "expression-stmt")) {
+        // expression-stmt → expression ; | ;
         auto node = new syntax_expression_stmt();
         if (n->child_num == 2) {
             auto expr_node = static_cast<syntax_expression *>(
@@ -175,6 +197,8 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "selection-stmt")) {
+        // selection-stmt → `if` `(` expression `)` statement | `if` `(`
+        // expression `)` statement `else` statement
         auto node = new syntax_selection_stmt();
 
         auto expr_node = static_cast<syntax_expression *>(
@@ -197,6 +221,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "iteration-stmt")) {
+        // iteration-stmt → `while` `(` expression `)` statement
         auto node = new syntax_iteration_stmt();
 
         auto expr_node = static_cast<syntax_expression *>(
@@ -211,6 +236,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "return-stmt")) {
+        // return-stmt → `return` ; | `return` expression ;
         auto node = new syntax_return_stmt();
         if (n->child_num == 3) {
             auto expr_node = static_cast<syntax_expression *>(
@@ -221,6 +247,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "expression")) {
+        // expression → var `=` expression | simple-expression
         if (n->child_num == 1) {
             return transform_node_iter(n->children[0]);
         }
@@ -238,6 +265,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "var")) {
+        // var → `ID` | `ID` `[` expression `]`
         auto node = new syntax_var();
         node->id = n->children[0]->name;
 
@@ -250,6 +278,8 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "simple-expression")) {
+        // simple-expression → additive-expression relop additive- expression |
+        // additive-expression
         auto node = new syntax_simple_expression();
 
         auto expr_node_a = static_cast<syntax_additive_expression *>(
@@ -285,6 +315,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "additive-expression")) {
+        // additive-expression → additive-expression addop term | term
         auto node = new syntax_additive_expression();
 
         if (n->child_num == 3) {
@@ -315,6 +346,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "term")) {
+        // term → term mulop factor | factor
         auto node = new syntax_term();
 
         if (n->child_num == 3) {
@@ -345,6 +377,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "factor")) {
+        // factor → `(` expression `)` | var | call | `NUM`
         int i = 0;
         if (n->child_num == 3) {
             i = 1;
@@ -361,6 +394,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
             return num_node;
         }
     } else if (STR_EQ(n->name, "call")) {
+        // call → `ID` `(` args `)`
         auto node = new syntax_call();
         node->id = n->children[0]->name;
 
