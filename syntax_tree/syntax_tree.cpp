@@ -53,7 +53,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         }
         s.push(list_ptr->children[0]);
 
-        while (!s.empty) {
+        while (!s.empty()) {
             // transform declaration
             auto child_node =
                 static_cast<syntax_declaration *>(transform_node_iter(s.top()));
@@ -113,7 +113,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
             // process param
             while (!s.empty()) {
                 auto child_node =
-                    static_cast<syntax_param *>(transform_node_iter(s.top));
+                    static_cast<syntax_param *>(transform_node_iter(s.top()));
 
                 auto child_node_shared =
                     std::shared_ptr<syntax_param>(child_node);
@@ -153,7 +153,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
             while (!s.empty()) {
                 auto decl_node = static_cast<syntax_var_declaration *>(
-                    transform_node_iter(s.top));
+                    transform_node_iter(s.top()));
                 auto decl_node_ptr =
                     std::shared_ptr<syntax_var_declaration>(decl_node);
                 node->local_declarations.push_back(decl_node_ptr);
@@ -749,7 +749,7 @@ void syntax_tree_printer::visit(syntax_term &node) {
         std::cout << ": ";
         if (node.op == Op_mul) {
             std::cout << "*";
-        } else if (node.op == Op_sub) {
+        } else if (node.op == Op_div) {
             std::cout << "/";
         } else {
             std::abort();
