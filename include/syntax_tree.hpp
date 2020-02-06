@@ -9,8 +9,10 @@
 extern "C" {
 #include "parser.tab.h"
 #include "syntax_tree.h"
-extern struct syn_tree *parser(const char *input_file_name,
-                               const char *output_file_name);
+
+// This function is provided by parser, see parser/syntree_parser.c
+extern struct syn_tree *syn_parser(const char *input_file_name,
+                                   const char *output_file_name);
 }
 #include <memory>
 #include <vector>

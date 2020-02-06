@@ -76,9 +76,12 @@ PARSER_HEADER	= ${GENERATED_DIR}/${PARSER}.tab.h
 ### source
 BISON_IN_SOURCE	= ${PARSER_SRC_DIR}/${PARSER}.y
 BISON_OUT_SOURCE = ${PARSER_OUT_DIR}/${PARSER}.tab.c
+PARSER_C_SRC	= ${wildcard ${PARSER_SRC_DIR}/*.c}
 
 ### obj
 PARSER_BISON_OBJ	= ${PARSER_OUT_DIR}/${PARSER}.o
+PARSER_C_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${PARSER_C_SRC}}
+PARSER_OBJ			= ${PARSER_BISON_OBJ} ${PARSER_C_OBJ}
 
 ### test
 PARSER_TEST_OUT_DIR	= ${TEST_OUT_DIR}/${PARSER_SRC_DIR}
@@ -99,13 +102,16 @@ all: prepare lex_test syntree_test bison_test
 ## parser rules
 
 ### bison test
-bison_test: ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ}
+bison_test: ${PARSER_TEST_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} ${PARSER_OBJ}
 	${CC} ${C_FLAG} ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} -o ${PARSER_TEST_OUT}
 
 ${PARSER_TEST_OBJ}: ${PARSER_TEST_SRC}
 	${CC} ${C_FLAG} -c -o ${PARSER_TEST_OBJ} ${PARSER_TEST_SRC} 
 
 ### bison generate
+${PARSER_C_OBJ}: ${BUILD_DIR}/%.o : %.c
+	${CC} ${C_FLAG} -c -o $@ $<
+
 ${PARSER_BISON_OBJ}: ${BISON_OUT_SOURCE}
 	${CC} ${C_FLAG} -c -o ${PARSER_BISON_OBJ} ${BISON_OUT_SOURCE}
 
