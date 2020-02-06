@@ -1,9 +1,15 @@
 # Makefile for cminus
 
+# -----------------------------------------------------------------------------
+# Defs
+# -----------------------------------------------------------------------------
+
 ## generic
 CC 				= gcc
+CXX				= g++
 C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
 C_FLAG 		   += -Wno-unused-function
+CXX_FLAG		= ${C_FLAG}
 
 ## build dir
 BUILD_DIR 		= build
@@ -52,9 +58,12 @@ SYNTREE_OUT_DIR	= ${BUILD_DIR}/${SYNTREE_SRC_DIR}
 
 ### source
 SYNTREE_C_FILE 	= ${wildcard ${SYNTREE_SRC_DIR}/*.c}
+SYNTREE_CXX_FILE = ${wildcard ${SYNTREE_SRC_DIR}/*.cpp}
 
 ### obj
-SYNTREE_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${SYNTREE_C_FILE}}
+SYNTREE_C_OBJ		= ${patsubst %.c, ${BUILD_DIR}/%.o, ${SYNTREE_C_FILE}}
+SYNTREE_CXX_OBJ		= ${patsubst %.cpp, ${BUILD_DIR}/%.obj, ${SYNTREE_CXX_FILE}}
+SYNTREE_OBJ			= ${SYNTREE_C_OBJ} ${SYNTREE_CXX_OBJ}
 
 ### test
 SYNTREE_TEST_SRC	= ${TEST_DIR}/syntree_test.c
@@ -93,7 +102,11 @@ PARSER_TEST_OUT	= ${BUILD_DIR}/parser_test
 DIRS = ${BUILD_DIR} ${LEXER_OUT_DIR} ${HELPER_OUT_DIR} ${LEXER_TEST_OUT_DIR} \
        ${PARSER_TEST_OUT_DIR} ${GENERATED_DIR} ${PARSER_OUT_DIR} ${SYNTREE_OUT_DIR}
 
-all: prepare lex_test syntree_test bison_test
+# -----------------------------------------------------------------------------
+# Rules
+# -----------------------------------------------------------------------------
+
+all: prepare lex_all syntree_all parser_all
 	$(info )
 	$(info ----------------------------)
 	$(info All Done)
@@ -101,9 +114,11 @@ all: prepare lex_test syntree_test bison_test
 
 ## parser rules
 
+parser_all: bison_test ${PARSER_OBJ}
+
 ### bison test
-bison_test: ${PARSER_TEST_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} ${PARSER_OBJ}
-	${CC} ${C_FLAG} ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} -o ${PARSER_TEST_OUT}
+bison_test: ${PARSER_TEST_OBJ} ${SYNTREE_C_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} ${PARSER_OBJ}
+	${CC} ${C_FLAG} ${PARSER_TEST_OBJ} ${PARSER_BISON_OBJ} ${SYNTREE_C_OBJ} ${HELPER_OBJ} ${LEXER_OBJ} -o ${PARSER_TEST_OUT}
 
 ${PARSER_TEST_OBJ}: ${PARSER_TEST_SRC}
 	${CC} ${C_FLAG} -c -o ${PARSER_TEST_OBJ} ${PARSER_TEST_SRC} 
@@ -126,23 +141,30 @@ bison_compile: ${BISON_IN_SOURCE}
 
 ## Syntree rules
 
+syntree_all: syntree_test ${SYNTREE_OBJ}
+
 ### syntree test
-syntree_test: ${SYNTREE_TEST_OBJ} ${SYNTREE_OBJ}
-	${CC} ${C_FLAG} ${SYNTREE_TEST_OBJ} ${SYNTREE_OBJ} -o ${SYNTREE_TEST_OUT}
+syntree_test: ${SYNTREE_TEST_OBJ} ${SYNTREE_C_OBJ}
+	${CC} ${C_FLAG} ${SYNTREE_TEST_OBJ} ${SYNTREE_C_OBJ} -o ${SYNTREE_TEST_OUT}
 
 ${SYNTREE_TEST_OBJ}: ${SYNTREE_TEST_SRC}
 	${CC} ${C_FLAG} -c -o ${SYNTREE_TEST_OBJ} ${SYNTREE_TEST_SRC}
 
 ### syntree
-${SYNTREE_OBJ}: ${BUILD_DIR}/%.o : %.c
+${SYNTREE_C_OBJ}: ${BUILD_DIR}/%.o : %.c
 	${CC} ${C_FLAG} -c -o $@ $<
+
+${SYNTREE_CXX_OBJ}: ${BUILD_DIR}/%.obj : %.cpp
+	${CXX} ${CXX_FLAG} -c -o $@ $<
 
 ## Flex rules
 
+lex_all: lex_test ${LEXER_OBJ}
+
 ### Flex test 
 
-lex_test: ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_OBJ}
-	${CC} ${C_FLAG} ${LEXER_C_OBJ}  ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_OBJ} -o ${LEXER_TEST_OUT} 
+lex_test: ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_C_OBJ}
+	${CC} ${C_FLAG} ${LEXER_C_OBJ}  ${LEXER_FLEX_TEST_OBJ} ${LEXER_TEST_OBJ} ${HELPER_OBJ} ${SYNTREE_C_OBJ} -o ${LEXER_TEST_OUT} 
 
 ${LEXER_TEST_OBJ}: ${LEXER_TEST_SRC}
 	${CC} ${C_FLAG} -c -o ${LEXER_TEST_OBJ} ${LEXER_TEST_SRC}
@@ -163,6 +185,8 @@ flex_comp:
 
 
 ## helper rules
+
+helper_all: ${HELPER_OBJ}
 
 ${HELPER_OBJ}: ${BUILD_DIR}/%.o: %.c
 	${CC} ${C_FLAG} -c -o $@ $<
