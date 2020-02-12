@@ -248,7 +248,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         return node;
     } else if (STR_EQ(n->name, "expression")) {
         // expression → var `=` expression | simple-expression
-        if (n->child_num == 1) {
+        if (n->child_num == 1) {    // simple expression
             return transform_node_iter(n->children[0]);
         }
         auto node = new syntax_assign_expression();

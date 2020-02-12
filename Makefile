@@ -10,6 +10,7 @@ CXX				= g++
 C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
 C_FLAG 		   += -Wno-unused-function
 CXX_FLAG		= ${C_FLAG}
+CXX_LINKFLAG	= -l LLVM ${CXX_FLAG} 
 
 ## build dir
 BUILD_DIR 		= build
@@ -98,19 +99,44 @@ PARSER_TEST_SRC	= ${TEST_DIR}/parser_test.c
 PARSER_TEST_OBJ	= ${PARSER_OUT_DIR}/parser_test.o
 PARSER_TEST_OUT	= ${BUILD_DIR}/parser_test
 
+#
+# cminus c main
+#
+
+### dir
+CMINUSC_SRC_DIR	= cminusc
+CMINUSC_OUT_DIR	= ${BUILD_DIR}/${CMINUSC_SRC_DIR}
+
+### source
+CMINUSC_SRC		= ${wildcard ${CMINUSC_SRC_DIR}/*.cpp}
+
+### obj
+CMINUSC_OBJ		= ${patsubst %.cpp, ${BUILD_DIR}/%.obj, ${CMINUSC_SRC}}
+
 ## All Dir
 DIRS = ${BUILD_DIR} ${LEXER_OUT_DIR} ${HELPER_OUT_DIR} ${LEXER_TEST_OUT_DIR} \
-       ${PARSER_TEST_OUT_DIR} ${GENERATED_DIR} ${PARSER_OUT_DIR} ${SYNTREE_OUT_DIR}
+       ${PARSER_TEST_OUT_DIR} ${GENERATED_DIR} ${PARSER_OUT_DIR} ${SYNTREE_OUT_DIR} \
+	   ${CMINUSC_OUT_DIR}
 
 # -----------------------------------------------------------------------------
 # Rules
 # -----------------------------------------------------------------------------
 
-all: prepare lex_all syntree_all parser_all
+all: prepare cminusc
 	$(info )
 	$(info ----------------------------)
 	$(info All Done)
 	$(info ----------------------------)
+
+# 
+# cminusc main rules
+#
+cminusc: lex_all syntree_all parser_all helper_all ${CMINUSC_OBJ} 
+	${CXX} ${CXX_LINKFLAG} -o ${BUILD_DIR}/cminus ${PARSER_OBJ} ${LEXER_OBJ} ${SYNTREE_OBJ} ${CMINUSC_OBJ} ${HELPER_OBJ}
+
+${CMINUSC_OBJ}: ${BUILD_DIR}/%.obj : %.cpp
+	${CXX} ${CXX_FLAG} -c -o $@ $<
+
 
 ## parser rules
 
