@@ -143,7 +143,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     func_now = theFunction;
 
     // set basic block
-    auto theBB = llvm::BasicBlock::Create(context, node.id, theFunction);
+    auto theBB = llvm::BasicBlock::Create(context, node.id + "_start", theFunction);
     builder.SetInsertPoint(theBB);
     bb_now = theBB;
 
@@ -154,6 +154,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
          arg++) {
         args.push_back(arg);
 
+        value_stack.push(arg);
         node.params[i]->accept(*this); // this makes the param into scope
         i++;
     }
@@ -165,9 +166,36 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     DEBUG_PRINT_2("leaving fun declaration");
 }
 
-void CminusBuilder::visit(syntax_param &node) {}
+void CminusBuilder::visit(syntax_param &node) {
+    DEBUG_PRINT_2("visiting param");
 
-void CminusBuilder::visit(syntax_compound_stmt &node) {}
+    llvm::AllocaInst* theParam;
+    if(node.isarray) {
+        theParam = builder.CreateAlloca(tInt32->getPointerTo());
+    } else {
+        theParam = builder.CreateAlloca(tInt32);
+    }
+    builder.CreateStore(value_stack.pop(), theParam);
+    scope.push(node.id, theParam);
+
+    DEBUG_PRINT_2("leaving param");
+}
+
+void CminusBuilder::visit(syntax_compound_stmt &node) {
+    DEBUG_PRINT_2("visiting compound stmt");
+
+    scope.enter();
+
+    for(auto iter : node.local_declarations) {
+        iter->accept(*this);
+    }
+
+    for(auto iter : node.statement_list) {
+        iter->accept(*this);
+    }
+
+    DEBUG_PRINT_2("leaving compound stmt");
+}
 
 void CminusBuilder::visit(syntax_expression_stmt &node) {}
 
