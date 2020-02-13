@@ -48,8 +48,8 @@ class CminusBuilder : public syntax_tree_visitor {
   public:
     CminusBuilder() : builder(context) {
         module = std::make_unique<llvm::Module>("cminus", context);
-        auto TyVoid = llvm::Type::getVoidTy(context);
-        auto TyInt32 = llvm::Type::getInt32Ty(context);
+        // auto TyVoid = llvm::Type::getVoidTy(context);
+        // auto TyInt32 = llvm::Type::getInt32Ty(context);
 
         // built-in function: input
         // auto input_type = llvm::FunctionType::get(TyInt32, false);
@@ -71,6 +71,7 @@ class CminusBuilder : public syntax_tree_visitor {
         // scope.enter();
         // scope.push("input", input_fun);
         // scope.push("output", output_fun);
+        scope.enter();  // go global
     }
 
     std::unique_ptr<llvm::Module> build() { return std::move(module); }

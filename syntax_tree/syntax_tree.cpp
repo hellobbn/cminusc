@@ -74,12 +74,14 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         node->type = Type_int;
         if (n->child_num == 3) { // int a;
             node->id = n->children[1]->name;
+            node->array_def = false;
         } else if (n->child_num == 6) { // int a[2];
             node->id = n->children[1]->name;
             int num = std::stoi(n->children[3]->name);
             auto num_node = std::make_shared<syntax_num>();
             num_node->value = num;
             node->num = num_node;
+            node->array_def = true;
         } else {
             PANIC("var-declaration transform failure!\n");
         }

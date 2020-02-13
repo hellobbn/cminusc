@@ -48,17 +48,17 @@ int main(int argc, char **argv) {
     // save exec name, if print_help is needed, use this exec_name
     std::string exec_name = argv[0];
 
-    DEBUG_PRINT_3("Exec name is " << exec_name << std::endl);
+    DEBUG_PRINT_3("Exec name is " << exec_name);
 
     // scan for flags
     for (int i = 1; i < argc; ++i) {
-        DEBUG_PRINT_3("opt: \"" << argv[i] << "\"" << std::endl);
+        DEBUG_PRINT_3("opt: \"" << argv[i] << "\"");
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            DEBUG_PRINT_3("-h or --help found" << std::endl);
+            DEBUG_PRINT_3("-h or --help found");
             print_help(exec_name);
             return 0;
         } else if (strcmp(argv[i], "-o") == 0) {
-            DEBUG_PRINT_3("-o found, checking output file name" << std::endl);
+            DEBUG_PRINT_3("-o found, checking output file name");
 
             if (!(output_path.empty())) {
                 // 2 -o directive
@@ -77,21 +77,21 @@ int main(int argc, char **argv) {
                 output_path = argv[i + 1];
                 i++; // skip the output path
                 DEBUG_PRINT_3("output obj name is " << output_path
-                                                    << std::endl);
+                                                    );
             }
         } else if (strcmp(argv[i], "--emit-llvm") == 0) {
-            DEBUG_PRINT_3("--emit-llvm found, setting flag." << std::endl);
+            DEBUG_PRINT_3("--emit-llvm found, setting flag." );
 
             emit = true;
         } else if (strcmp(argv[i], "--analyse") == 0) {
-            DEBUG_PRINT_3("--analyse found, setting flag." << std::endl);
+            DEBUG_PRINT_3("--analyse found, setting flag." );
 
             analyse = true;
         } else {
             if (input_path.empty()) {
                 // no input path yet
                 // TODO: multi files
-                DEBUG_PRINT_3("found input path: " << argv[i] << std::endl);
+                DEBUG_PRINT_3("found input path: " << argv[i]);
 
                 input_path = argv[i];
                 // This is for Linux convention only
@@ -108,8 +108,8 @@ int main(int argc, char **argv) {
     // check if all done
     if (input_path.empty()) {
         DEBUG_PRINT("no input file found, possible parsing command line error"
-                    << std::endl);
-        DEBUG_PRINT("printing help info..." << std::endl);
+                    );
+        DEBUG_PRINT("printing help info..." );
 
         print_help(exec_name);
         return 0;
@@ -117,9 +117,9 @@ int main(int argc, char **argv) {
 
     // check target path
     if (output_path.empty()) {
-        DEBUG_PRINT("no output path found found" << std::endl);
+        DEBUG_PRINT("no output path found found");
         DEBUG_PRINT("checking input file to see if it is parsed right"
-                    << std::endl);
+                    );
         auto pos = input_path.rfind('.');
 
         if ((int)pos == -1) {
@@ -142,13 +142,13 @@ int main(int argc, char **argv) {
             }
 
             DEBUG_PRINT_3("setting the output file to \"" << output_path << "\""
-                                                          << std::endl);
+                                                          );
         }
     }
 
     // print debug info
-    DEBUG_PRINT("input file:  \"" << input_path << "\"." << std::endl);
-    DEBUG_PRINT("output file: \"" << output_path << "\"." << std::endl);
+    DEBUG_PRINT("input file:  \"" << input_path << "\"." );
+    DEBUG_PRINT("output file: \"" << output_path << "\"." );
 
     auto s = syn_parser(input_path.c_str());
 
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
     } else if (emit) {
         auto output_file = llvm::make_unique<llvm::ToolOutputFile>(
             output_path, error_msg, llvm::sys::fs::F_None);
-        DEBUG_PRINT_3("file output to " << output_path << std::endl);
+        DEBUG_PRINT_3("file output to " << output_path );
         if (error_msg.value()) {
             llvm::errs() << error_msg.message() << "\n";
             return -1;

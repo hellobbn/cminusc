@@ -111,6 +111,7 @@ struct syntax_num : syntax_factor {
 struct syntax_var_declaration : syntax_declaration {
     virtual void accept(syntax_tree_visitor &) override final;
     std::shared_ptr<syntax_num> num;
+    bool array_def;
 };
 
 struct syntax_fun_declaration : syntax_declaration {
