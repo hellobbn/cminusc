@@ -109,7 +109,61 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
     DEBUG_PRINT("leaving var declaration");
 }
 
-void CminusBuilder::visit(syntax_fun_declaration &node) {}
+void CminusBuilder::visit(syntax_fun_declaration &node) {
+    DEBUG_PRINT_2("visiting fun declaration");
+
+    // param list
+    size_t param_size = node.params.size(); // number of params
+    std::vector<llvm::Type *> param_table;
+    // fill in the table of type of params
+    for (int i = 0; i < param_size; ++i) {
+        auto tmp = node.params[i];
+        if (tmp->isarray) {
+            param_table.push_back(tInt32->getPointerTo());
+        } else {
+            param_table.push_back(tInt32);
+        }
+    }
+
+    // function return type
+    llvm::Type *fun_type;
+    if (node.type == Type_int) { // return int
+        fun_type = llvm::Type::getInt32Ty(context);
+    } else { // return void
+        fun_type = llvm::Type::getVoidTy(context);
+    }
+
+    // create function
+    auto theFunction = llvm::Function::Create(
+        llvm::FunctionType::get(fun_type, param_table, false),
+        llvm::GlobalValue::LinkageTypes::ExternalLinkage, node.id,
+        module.get());
+    scope.push(node.id, theFunction);
+    scope.enter();
+    func_now = theFunction;
+
+    // set basic block
+    auto theBB = llvm::BasicBlock::Create(context, node.id, theFunction);
+    builder.SetInsertPoint(theBB);
+    bb_now = theBB;
+
+    // set up arg
+    std::vector<llvm::Value *> args;
+    int i = 0;
+    for (auto arg = theFunction->arg_begin(); arg != theFunction->arg_end();
+         arg++) {
+        args.push_back(arg);
+
+        node.params[i]->accept(*this); // this makes the param into scope
+        i++;
+    }
+
+    node.compound_stmt->accept(*this);
+
+    scope.exit();
+
+    DEBUG_PRINT_2("leaving fun declaration");
+}
 
 void CminusBuilder::visit(syntax_param &node) {}
 
