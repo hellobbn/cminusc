@@ -39,18 +39,21 @@ struct syn_tree* syn_parser(const char* input_file_name) {
     syntax_tree = newSynTree();
 
     // get input file
-    char input_path[256] = "./testcase/";
-    strcat(input_path, input_file_name);
+    // char input_path[256] = "./testcase/";
+    // strcat(input_path, input_file_name);
 
     // open file for analysis
-    if(!(yyin = fopen(input_path, "r"))) {
-        PANIC("Open file %s failed.\n", input_path);
+    if(!(yyin = fopen(input_file_name, "r"))) {
+        PANIC("Open file %s failed.\n", input_file_name);
     }
 
     // done, start parsing
     DEBUG_PRINT("Parser start for %s\n", input_file_name);
 
     yyparse();  // this operation constructs a syntax tree
+
+
+    fclose(yyin);
 
     return syntax_tree;
 }

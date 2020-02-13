@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
 
     // scan for flags
     for (int i = 1; i < argc; ++i) {
+        DEBUG_PRINT_3("opt: \"" << argv[i] << "\"" << std::endl);
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             DEBUG_PRINT_3("-h or --help found" << std::endl);
             print_help(exec_name);
@@ -84,28 +85,180 @@ int main(int argc, char **argv) {
             emit = true;
         } else if (strcmp(argv[i], "--analyse") == 0) {
             DEBUG_PRINT_3("--analyse found, setting flag." << std::endl);
+
+            analyse = true;
         } else {
             if (input_path.empty()) {
                 // no input path yet
                 // TODO: multi files
                 DEBUG_PRINT_3("found input path: " << argv[i] << std::endl);
+
                 input_path = argv[i];
+                // This is for Linux convention only
+                if (input_path[0] != '.' && input_path[1] != '/') {
+                    input_path = "./" + input_path; // Linux ONLY
+                }
             } else {
                 print_help(exec_name);
                 return 0;
             }
         }
+    }
 
-        // check if all done
-        if (input_path.empty()) {
-            DEBUG_PRINT(
-                "no input file found, possible parsing command line error"
-                << std::endl);
-            DEBUG_PRINT("printing help info..." << std::endl);
+    // check if all done
+    if (input_path.empty()) {
+        DEBUG_PRINT("no input file found, possible parsing command line error"
+                    << std::endl);
+        DEBUG_PRINT("printing help info..." << std::endl);
 
-            print_help(exec_name);
-            return 0;
+        print_help(exec_name);
+        return 0;
+    }
+
+    // check target path
+    if (output_path.empty()) {
+        DEBUG_PRINT("no output path found found" << std::endl);
+        DEBUG_PRINT("checking input file to see if it is parsed right"
+                    << std::endl);
+        auto pos = input_path.rfind('.');
+
+        if ((int)pos == -1) {
+            // not found '.'
+            ERROR("the input file parsed is \""
+                  << input_path << "\". Possible wrong." << std::endl);
+        } else {
+            // found '.', check file extension
+            if (input_path.substr(pos) != ".cminus") {
+                ERROR("the input file \""
+                      << input_path << "\" has wrong extension!" << std::endl);
+            }
+
+            // right extension
+            if (emit) {
+                output_path = input_path.substr(0, pos) + ".ll";
+            } else {
+                pos = input_path.rfind('/');
+                output_path = input_path.substr(0, pos + 1) + "a.out";
+            }
+
+            DEBUG_PRINT_3("setting the output file to \"" << output_path << "\""
+                                                          << std::endl);
         }
+    }
+
+    // print debug info
+    DEBUG_PRINT("input file:  \"" << input_path << "\"." << std::endl);
+    DEBUG_PRINT("output file: \"" << output_path << "\"." << std::endl);
+
+    auto s = syn_parser(input_path.c_str());
+
+    // if you need to see the syntax tree...
+    // printSynTree(stdout, s);
+
+    // convert it to a tree
+    auto tree = syntax_tree(s);
+
+    CminusBuilder builder;
+    tree.run_visitor(builder);
+
+    auto mod = builder.build();
+    mod->setSourceFileName(input_path);
+
+    // check
+    // https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
+    // TODO: check later
+    std::error_code error_msg;
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    llvm::PassRegistry *Registry = llvm::PassRegistry::getPassRegistry();
+    initializeCore(*Registry);
+    initializeCodeGen(*Registry);
+    initializeScalarOpts(*Registry);
+
+    llvm::Triple theTriple;
+    theTriple.setTriple(llvm::sys::getDefaultTargetTriple());
+    std::string Error;
+    const llvm::Target *theTarget =
+        llvm::TargetRegistry::lookupTarget("", theTriple, Error);
+
+    std::string CPUStr = getCPUStr(), FeaturesStr = getFeaturesStr();
+    CodeGenOpt::Level OLv1 = CodeGenOpt::None;
+    TargetOptions Options = InitTargetOptionsFromCodeGenFlags();
+    std::unique_ptr<TargetMachine> Target(theTarget->createTargetMachine(
+        theTriple.getTriple(), CPUStr, FeaturesStr, Options, getRelocModel(),
+        getCodeModel(), OLv1));
+    assert(Target);
+
+    legacy::PassManager PM;
+
+    llvm::TargetLibraryInfoImpl TLII(Triple(mod->getTargetTriple()));
+    PM.add(new TargetLibraryInfoWrapperPass(TLII));
+    mod->setDataLayout(Target->createDataLayout());
+    UpgradeDebugInfo(*mod);
+    setFunctionAttributes(CPUStr, FeaturesStr, *mod);
+
+    llvm::LLVMTargetMachine &LLVMTM = static_cast<LLVMTargetMachine &>(*Target);
+    MachineModuleInfo *MMI = new MachineModuleInfo(&LLVMTM);
+    TargetPassConfig &TPC = *LLVMTM.createPassConfig(PM);
+
+    TPC.setDisableVerify(true);
+    PM.add(&TPC);
+    PM.add(MMI);
+
+    if (analyse) {
+        std::unique_ptr<legacy::FunctionPassManager> FPM;
+        FPM.reset(new legacy::FunctionPassManager(mod.get()));
+        FPM->add(createVerifierPass());
+        FPM->doInitialization();
+
+        for (llvm::Function &F : *mod) {
+            FPM->run(F);
+        }
+        FPM->doFinalization();
+        PM.add(createVerifierPass());
+        PM.run(*mod);
+        std::cout << "Your module looks fine :)." << std::endl;
+    } else if (emit) {
+        auto output_file = llvm::make_unique<llvm::ToolOutputFile>(
+            output_path, error_msg, llvm::sys::fs::F_None);
+        DEBUG_PRINT_3("file output to " << output_path << std::endl);
+        if (error_msg.value()) {
+            llvm::errs() << error_msg.message() << "\n";
+            return -1;
+        }
+        auto output_ostream = &output_file->os();
+        PM.run(*mod);
+        mod->print(*output_ostream, nullptr);
+        output_file->keep();
+
+        return 0;
+    } else {
+
+        auto obj_file_name = output_path + ".o";
+        auto obj_file = llvm::make_unique<llvm::ToolOutputFile>(
+            obj_file_name, error_msg, llvm::sys::fs::F_None);
+        if (error_msg.value()) {
+            llvm::errs() << error_msg.message() << "\n";
+            return -1;
+        }
+
+        auto obj_ostream = &obj_file->os();
+        TPC.addISelPasses();
+        TPC.addMachinePasses();
+        TPC.setInitialized();
+
+        LLVMTM.addAsmPrinter(PM, *obj_ostream, nullptr,
+                             TargetMachine::CGFT_ObjectFile, MMI->getContext());
+        PM.add(createFreeMachineFunctionPass());
+        PM.run(*mod);
+        obj_file->keep();
+
+        auto command_string =
+            std::string("clang -w ") + output_path + ".o -o " + output_path;
+        std::system(command_string.c_str());
     }
 
     return 0;

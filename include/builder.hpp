@@ -52,25 +52,25 @@ class CminusBuilder : public syntax_tree_visitor {
         auto TyInt32 = llvm::Type::getInt32Ty(context);
 
         // built-in function: input
-        auto input_type = llvm::FunctionType::get(TyInt32, false);
-        auto input_fun = llvm::Function::Create(
-            input_type, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-            "input", module.get());
+        // auto input_type = llvm::FunctionType::get(TyInt32, false);
+        // auto input_fun = llvm::Function::Create(
+        //     input_type, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        //     "input", module.get());
 
         // built-in function: output
-        std::vector<llvm::Type *> output_params;
-        output_params.push_back(TyInt32);
-        auto output_type = llvm::FunctionType::get(TyInt32, false);
-        auto output_fun = llvm::Function::Create(
-            output_type, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-            "output", module.get());
+        // std::vector<llvm::Type *> output_params;
+        // output_params.push_back(TyInt32);
+        // auto output_type = llvm::FunctionType::get(TyInt32, false);
+        // auto output_fun = llvm::Function::Create(
+        //     output_type, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        //     "output", module.get());
 
         // built-in function: neg_idx_except_fun(disabled)
         // empty
 
-        scope.enter();
-        scope.push("input", input_fun);
-        scope.push("output", output_fun);
+        // scope.enter();
+        // scope.push("input", input_fun);
+        // scope.push("output", output_fun);
     }
 
     std::unique_ptr<llvm::Module> build() { return std::move(module); }
