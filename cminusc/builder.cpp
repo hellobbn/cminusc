@@ -170,6 +170,9 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
 void CminusBuilder::visit(syntax_param &node) {
     DEBUG_PRINT_2("visiting param");
 
+    static int name_num = 0;
+    name_num ++;
+
     llvm::AllocaInst *theParam;
     if (node.isarray) {
         theParam = builder.CreateAlloca(tInt32->getPointerTo());
@@ -177,6 +180,9 @@ void CminusBuilder::visit(syntax_param &node) {
         theParam = builder.CreateAlloca(tInt32);
     }
     builder.CreateStore(value_stack.pop(), theParam);
+
+    theParam->setName("fun_param_" + std::to_string(name_num));
+
     scope.push(node.id, theParam);
 
     DEBUG_PRINT_2("leaving param");
@@ -399,19 +405,21 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
         // we should not visit it, a `load` is required
         // FIXME: when not in `main`, a load is needed.
         // FIXME: actually when passing as a `parameter`, a load is needed
-        auto tmp = scope.find(node.var->id);
+        llvm::Value* tmp;
+        tmp = scope.find(node.var->id);
 
-        // if(tmp->getType()->isArrayTy() == false) {
-        //     DEBUG_PRINT_3("This is a pointer Type!");
-        //     tmp = builder.CreateLoad(tmp);
-        // }
-        //auto loaded_tmp = builder.CreateLoad(tmp);
+        if(tmp->getName().find("fun_param") != std::string::npos) {
+            DEBUG_PRINT_3("This is an Argument");
+            tmp = builder.CreateLoad(tmp);
+        } else {
+            DEBUG_PRINT_3("Not an argument");
+        }
 
         // visit expr
         node.var->expression->accept(*this);
         auto var_expression = value_stack.pop();
 
-        var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, {CONST(0), var_expression}, "", bb_now);
+        var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, var_expression, "", bb_now);
     } else {
         node.var->accept(*this);
 
