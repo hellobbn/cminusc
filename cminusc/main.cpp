@@ -76,15 +76,14 @@ int main(int argc, char **argv) {
                 // get output path
                 output_path = argv[i + 1];
                 i++; // skip the output path
-                DEBUG_PRINT_3("output obj name is " << output_path
-                                                    );
+                DEBUG_PRINT_3("output obj name is " << output_path);
             }
         } else if (strcmp(argv[i], "--emit-llvm") == 0) {
-            DEBUG_PRINT_3("--emit-llvm found, setting flag." );
+            DEBUG_PRINT_3("--emit-llvm found, setting flag.");
 
             emit = true;
         } else if (strcmp(argv[i], "--analyse") == 0) {
-            DEBUG_PRINT_3("--analyse found, setting flag." );
+            DEBUG_PRINT_3("--analyse found, setting flag.");
 
             analyse = true;
         } else {
@@ -107,9 +106,8 @@ int main(int argc, char **argv) {
 
     // check if all done
     if (input_path.empty()) {
-        DEBUG_PRINT("no input file found, possible parsing command line error"
-                    );
-        DEBUG_PRINT("printing help info..." );
+        DEBUG_PRINT("no input file found, possible parsing command line error");
+        DEBUG_PRINT("printing help info...");
 
         print_help(exec_name);
         return 0;
@@ -118,8 +116,7 @@ int main(int argc, char **argv) {
     // check target path
     if (output_path.empty()) {
         DEBUG_PRINT("no output path found found");
-        DEBUG_PRINT("checking input file to see if it is parsed right"
-                    );
+        DEBUG_PRINT("checking input file to see if it is parsed right");
         auto pos = input_path.rfind('.');
 
         if ((int)pos == -1) {
@@ -141,14 +138,14 @@ int main(int argc, char **argv) {
                 output_path = input_path.substr(0, pos + 1) + "a.out";
             }
 
-            DEBUG_PRINT_3("setting the output file to \"" << output_path << "\""
-                                                          );
+            DEBUG_PRINT_3("setting the output file to \"" << output_path
+                                                          << "\"");
         }
     }
 
     // print debug info
-    DEBUG_PRINT("input file:  \"" << input_path << "\"." );
-    DEBUG_PRINT("output file: \"" << output_path << "\"." );
+    DEBUG_PRINT("input file:  \"" << input_path << "\".");
+    DEBUG_PRINT("output file: \"" << output_path << "\".");
 
     auto s = syn_parser(input_path.c_str());
 
@@ -224,7 +221,7 @@ int main(int argc, char **argv) {
     } else if (emit) {
         auto output_file = llvm::make_unique<llvm::ToolOutputFile>(
             output_path, error_msg, llvm::sys::fs::F_None);
-        DEBUG_PRINT_3("file output to " << output_path );
+        DEBUG_PRINT_3("file output to " << output_path);
         if (error_msg.value()) {
             llvm::errs() << error_msg.message() << "\n";
             return -1;
@@ -256,9 +253,13 @@ int main(int argc, char **argv) {
         PM.run(*mod);
         obj_file->keep();
 
-        auto command_string =
-            std::string("clang -w ") + output_path + ".o -o " + output_path;
-        std::system(command_string.c_str());
+        // auto command_string =
+        //     std::string("clang -w ") + output_path + ".o -o " + output_path;
+        // std::system(command_string.c_str());
+
+        // make it use ld for linking:
+        // https://stackoverflow.com/questions/51677440/linking-llvm-produced-object-code-with-ld
+        
     }
 
     return 0;
