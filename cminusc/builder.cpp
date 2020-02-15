@@ -162,6 +162,11 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
 
     node.compound_stmt->accept(*this);
 
+    // this is important, create a ret if there is not one
+    if(node.type == Type_int && bb_now->getTerminator() == nullptr) {
+        builder.CreateRet(CONST(0));
+    }
+
     scope.exit();
 
     DEBUG_PRINT_2("leaving fun declaration");
@@ -375,11 +380,20 @@ void CminusBuilder::visit(syntax_var &node) {
         // find the pointer related to id
         auto val = scope.find(node.id);
 
-        // get element
-        auto ptr = llvm::GetElementPtrInst::CreateInBounds(val, {CONST(0), arr_expr}, "", bb_now);
+        // get element, is it a parameter or a local define ?
+        llvm::Value* tmp;
+        llvm::Value* result;
+        if(val->getName().find("fun_param") != std::string::npos) {
+            tmp = builder.CreateLoad(val);
+            tmp = llvm::GetElementPtrInst::CreateInBounds(tmp, arr_expr, "", bb_now);
+        } else {
+            tmp = llvm::GetElementPtrInst::CreateInBounds(val, {CONST(0), arr_expr}, "", bb_now);
+        }
+
+        result = builder.CreateLoad(tmp);
 
         // use stack to pass the value
-        value_stack.push(ptr);
+        value_stack.push(result);
     } else {
         // the pointer, or the var only
         auto val = scope.find(node.id);
@@ -402,28 +416,23 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
     // visit var
     llvm::Value* var_l;
     if(node.var->expression) {
-        // we should not visit it, a `load` is required
-        // FIXME: when not in `main`, a load is needed.
-        // FIXME: actually when passing as a `parameter`, a load is needed
         llvm::Value* tmp;
         tmp = scope.find(node.var->id);
-
-        if(tmp->getName().find("fun_param") != std::string::npos) {
-            DEBUG_PRINT_3("This is an Argument");
-            tmp = builder.CreateLoad(tmp);
-        } else {
-            DEBUG_PRINT_3("Not an argument");
-        }
 
         // visit expr
         node.var->expression->accept(*this);
         auto var_expression = value_stack.pop();
 
-        var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, var_expression, "", bb_now);
+        if(tmp->getName().find("fun_param") != std::string::npos) {
+            DEBUG_PRINT_3("This is an Argument");
+            tmp = builder.CreateLoad(tmp);
+            var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, var_expression, "", bb_now);
+        } else {
+            var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, {CONST(0), var_expression}, "", bb_now);
+            DEBUG_PRINT_3("Not an argument");
+        }
     } else {
-        node.var->accept(*this);
-
-        var_l = value_stack.pop();
+        var_l = scope.find(node.var->id);
     }
 
     // store
@@ -538,6 +547,25 @@ void CminusBuilder::visit(syntax_term &node) {
 }
 
 void CminusBuilder::visit(syntax_call &node) {
+    DEBUG_PRINT_2("visiting call");
 
+    // setting args
+    std::vector<llvm::Value*> call_args;
 
+    for(auto iter : node.args) {
+        iter->accept(*this);
+
+        call_args.push_back(value_stack.pop());
+    }
+
+    // find function
+    auto theFunc = scope.find(node.id);
+
+    // call
+    auto call_ret = builder.CreateCall(theFunc, call_args);
+
+    // pass value through stack
+    value_stack.push(call_ret);
+
+    DEBUG_PRINT_2("leaving call");
 }
