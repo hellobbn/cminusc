@@ -116,7 +116,7 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     size_t param_size = node.params.size(); // number of params
     std::vector<llvm::Type *> param_table;
     // fill in the table of type of params
-    for (int i = 0; i < param_size; ++i) {
+    for (size_t i = 0; i < param_size; ++i) {
         auto tmp = node.params[i];
         if (tmp->isarray) {
             param_table.push_back(tInt32->getPointerTo());
@@ -307,7 +307,6 @@ void CminusBuilder::visit(syntax_iteration_stmt &node) {
     // iteration_stmt -> while ( expression ) statement
     DEBUG_PRINT_2("visiting iteration stmt");
 
-    int all_return = 0;
     static int while_cnt =
         0; // increase it each time a iteration_stmt is visited
 
