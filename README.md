@@ -8,7 +8,9 @@ This is a re-mastered project for Compiler Principle @ USTC 2019 Fall.
 
 - [x] Lexer (flex)
 - [x] Parser (bison)
-- [ ] llvm code gen
+- [x] llvm code gen
+- [ ] built-in functions
+- [ ] compile to exec
 
 ## B. build
 
