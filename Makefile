@@ -7,10 +7,13 @@
 ## generic
 CC 				= gcc
 CXX				= g++
+AR				= ar
+ASM 			= nasm
 C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
 C_FLAG 		   += -Wno-unused-function
 CXX_FLAG		= ${C_FLAG}
 CXX_LINKFLAG	= -l LLVM ${CXX_FLAG} 
+ASM_FLAG		= -felf64
 
 ## build dir
 BUILD_DIR 		= build
@@ -113,10 +116,27 @@ CMINUSC_SRC		= ${wildcard ${CMINUSC_SRC_DIR}/*.cpp}
 ### obj
 CMINUSC_OBJ		= ${patsubst %.cpp, ${BUILD_DIR}/%.obj, ${CMINUSC_SRC}}
 
+#
+# Library
+#
+
+### dir
+LIB_SRC_DIR	= lib
+LIB_OUT_DIR	= ${BUILD_DIR}/${LIB_SRC_DIR}
+
+### source
+LIB_ASM_SRC	= ${wildcard ${LIB_SRC_DIR}/*.asm}
+
+### obj
+LIB_ASM_OBJ	= ${patsubst %.asm, ${BUILD_DIR}/%.obj, ${LIB_ASM_SRC}}
+
+### lib
+LIB_FINAL	= ${BUILD_DIR}/libcminusc.a
+
 ## All Dir
 DIRS = ${BUILD_DIR} ${LEXER_OUT_DIR} ${HELPER_OUT_DIR} ${LEXER_TEST_OUT_DIR} \
        ${PARSER_TEST_OUT_DIR} ${GENERATED_DIR} ${PARSER_OUT_DIR} ${SYNTREE_OUT_DIR} \
-	   ${CMINUSC_OUT_DIR}
+	   ${CMINUSC_OUT_DIR} ${LIB_OUT_DIR}
 
 # -----------------------------------------------------------------------------
 # Rules
@@ -131,12 +151,23 @@ all: prepare cminusc
 # 
 # cminusc main rules
 #
-cminusc: lex_all syntree_all parser_all helper_all ${CMINUSC_OBJ} 
+cminusc: lex_all syntree_all parser_all helper_all lib_all ${CMINUSC_OBJ} 
 	${CXX} ${CXX_LINKFLAG} -o ${BUILD_DIR}/cminus ${PARSER_OBJ} ${LEXER_OBJ} ${SYNTREE_OBJ} ${CMINUSC_OBJ} ${HELPER_OBJ}
 
 ${CMINUSC_OBJ}: ${BUILD_DIR}/%.obj : %.cpp
 	${CXX} ${CXX_FLAG} -c -o $@ $<
 
+
+#
+# cminusc lib rules
+#
+lib_all: ${LIB_FINAL}
+
+${LIB_FINAL}: ${LIB_ASM_OBJ}
+	${AR} rcs ${LIB_FINAL} ${LIB_ASM_OBJ}
+
+${LIB_ASM_OBJ} : ${BUILD_DIR}/%.obj : %.asm
+	${ASM} ${ASM_FLAG} -o $@ $<
 
 ## parser rules
 
