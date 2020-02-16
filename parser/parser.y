@@ -37,7 +37,7 @@ struct syn_tree* syntax_tree;
 %token <pnode> tok_comma tok_l_parenthese tok_r_parenthese tok_l_bracket
 %token <pnode> tok_r_bracket tok_l_brace tok_r_brace tok_else tok_if tok_int tok_return
 %token <pnode> tok_void tok_while tok_identifier tok_number tok_array
-%token <pnode> tok_letter tok_eol tok_comment tok_blank
+%token <pnode> tok_letter tok_eol tok_comment tok_blank tok_char
 
 /* ************************************
  * Type definitions
@@ -114,6 +114,11 @@ type-specifier: tok_int
         synTreeNodeAddChild($$, $1);
     }
     | tok_void
+    {
+        $$ = newSynTreeNode("type-specifier");
+        synTreeNodeAddChild($$, $1);
+    }
+    | tok_char
     {
         $$ = newSynTreeNode("type-specifier");
         synTreeNodeAddChild($$, $1);

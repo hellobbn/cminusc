@@ -17,6 +17,7 @@ extern "C" {
 
 enum type_specifier {
     Type_int, // int
+    Type_char,  // char
     Type_void // void
 };
 

@@ -195,6 +195,13 @@ identifierPattern [a-zA-Z][a-zA-Z]*
     return tok_int;
 }
 
+"char" {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode("char");
+#endif
+    return tok_char;
+}
+
 "return" {
 #ifndef LEX_TEST
     yylval.pnode = newSynTreeNode("return");

@@ -5,6 +5,10 @@
 
 #include <iostream>
 
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
 #define DEBUG 3
 
 #ifdef DEBUG_PRINT
@@ -46,7 +50,7 @@
 #define ERROR(x)                                                               \
     {                                                                          \
                                                                                \
-        std::cerr << "\033[31mERROR: \033[0m" << x << std::ends;               \
+        std::cerr << "\033[31mERROR: \033[0m" << x << std::endl;               \
         exit(1);                                                               \
     }
 

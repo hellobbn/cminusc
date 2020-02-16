@@ -7,6 +7,7 @@ extern "C" {
 #include "helper.h"
 }
 
+#include "cxx_helper.hpp"
 #include "syntax_tree.hpp"
 #include <cstring>
 #include <iostream>
@@ -71,7 +72,16 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         // var-declaration -> type-specifier `ID`; | type-specifier `ID` `[`
         // `NUM` `]`
         auto node = new syntax_var_declaration();
-        node->type = Type_int;
+        
+        if(STR_EQ(n->children[0]->children[0]->name, "int")) {
+            node->type = Type_int;
+        } else if(STR_EQ(n->children[0]->children[0]->name, "char")) {
+            node->type = Type_char;
+            ERROR("CHAR!!!");
+        } else {
+            ERROR("NO SUCH TYPE SPECIFIER " << n->children[0]->children[0]->name << std::endl);
+        }
+
         if (n->child_num == 3) { // int a;
             node->id = n->children[1]->name;
             node->array_def = false;
@@ -132,7 +142,15 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
     } else if (STR_EQ(n->name, "param")) {
         // param → type-specifier `ID` | type-specifier `ID` `[]`
         auto node = new syntax_param();
-        node->type = Type_int;
+
+        if(STR_EQ(n->children[0]->children[0]->name, "int")) {
+            node->type = Type_int;
+        } else if(STR_EQ(n->children[0]->children[0]->name, "char")) {
+            node->type = Type_char;
+            ERROR("CHAR!!!");
+        } else {
+            ERROR("Unknow type " << n->children[0]->children[0]->name);
+        }
         node->id = n->children[1]->name;
 
         if (n->child_num == 3) {
