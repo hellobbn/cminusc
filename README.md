@@ -11,6 +11,7 @@ The project is re-organised and re-written by bbn.
 - [x] Lexer (flex)
 - [x] Parser (bison)
 - [x] llvm code gen
+- [ ] System V calling ABI
 - [ ] testcase
 - [ ] built-in functions
 - [ ] compile to exec
