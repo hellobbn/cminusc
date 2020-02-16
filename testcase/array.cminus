@@ -12,6 +12,6 @@ int main(void) {
         x = y;
         y = temp;
     }
-    gcd(x,y);
-    return 0;
+    return gcd(x,y);
+    
 }
