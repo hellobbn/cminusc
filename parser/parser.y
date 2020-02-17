@@ -477,6 +477,7 @@ arg-list: arg-list tok_comma expression
  */
 void yyerror(const char* s) {
     fprintf(stderr, "%s:%d syntax error for %s\n", s, yylineno, yytext);
+    exit(1);    // exit, fixing segmentation fault
 }
 
 // test function for parser
