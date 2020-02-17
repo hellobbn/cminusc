@@ -163,9 +163,9 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     node.compound_stmt->accept(*this);
 
     // this is important, create a ret if there is not one
-    if(node.type == Type_int && bb_now->getTerminator() == nullptr) {
+    if (node.type == Type_int && bb_now->getTerminator() == nullptr) {
         builder.CreateRet(CONST(0));
-    } else if(node.type == Type_void && bb_now->getTerminator() == nullptr) {
+    } else if (node.type == Type_void && bb_now->getTerminator() == nullptr) {
         builder.CreateRet(nullptr);
     }
 
@@ -178,7 +178,7 @@ void CminusBuilder::visit(syntax_param &node) {
     DEBUG_PRINT_2("visiting param");
 
     static int name_num = 0;
-    name_num ++;
+    name_num++;
 
     llvm::AllocaInst *theParam;
     if (node.isarray) {
@@ -361,9 +361,8 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
         node.expression->accept(*this);
         builder.CreateRet(value_stack.pop());
     } else {
-        // FIXME: return void
-        builder.CreateRet(
-            nullptr);
+        // return only, no expression
+        builder.CreateRet(nullptr);
     }
 
     DEBUG_PRINT_2("leaving return stmt");
@@ -375,11 +374,11 @@ void CminusBuilder::visit(syntax_var &node) {
 
     auto val = scope.find(node.id);
 
-    if(val->getType()->isPointerTy()) {
+    if (val->getType()->isPointerTy()) {
         // id[ expression ], visit expression first
         DEBUG_PRINT("ARRAY!!!");
-        llvm::Value* arr_expr;
-        if(node.expression != nullptr) {
+        llvm::Value *arr_expr;
+        if (node.expression != nullptr) {
             node.expression->accept(*this);
             arr_expr = value_stack.pop();
         } else {
@@ -387,16 +386,18 @@ void CminusBuilder::visit(syntax_var &node) {
         }
 
         // get element, is it a parameter or a local define ?
-        llvm::Value* tmp;
-        llvm::Value* result;
-        if(val->getName().find("fun_param") != std::string::npos) {
+        llvm::Value *tmp;
+        llvm::Value *result;
+        if (val->getName().find("fun_param") != std::string::npos) {
             tmp = builder.CreateLoad(val);
-            tmp = llvm::GetElementPtrInst::CreateInBounds(tmp, arr_expr, "", bb_now);
+            tmp = llvm::GetElementPtrInst::CreateInBounds(tmp, arr_expr, "",
+                                                          bb_now);
         } else {
-            tmp = llvm::GetElementPtrInst::CreateInBounds(val, {CONST(0), arr_expr}, "", bb_now);
+            tmp = llvm::GetElementPtrInst::CreateInBounds(
+                val, {CONST(0), arr_expr}, "", bb_now);
         }
 
-        if(node.expression != nullptr) {
+        if (node.expression != nullptr) {
             result = builder.CreateLoad(tmp);
         } else {
             result = tmp;
@@ -407,7 +408,7 @@ void CminusBuilder::visit(syntax_var &node) {
     } else {
         // the pointer, or the var only
         auto load_val = builder.CreateLoad(val);
-        
+
         // check if it is array
         value_stack.push(load_val); // FIXME: may be wrong, may be right.
     }
@@ -423,21 +424,23 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
     auto assign_expr_r = value_stack.pop();
 
     // visit var
-    llvm::Value* var_l;
-    if(node.var->expression) {
-        llvm::Value* tmp;
+    llvm::Value *var_l;
+    if (node.var->expression) {
+        llvm::Value *tmp;
         tmp = scope.find(node.var->id);
 
         // visit expr
         node.var->expression->accept(*this);
         auto var_expression = value_stack.pop();
 
-        if(tmp->getName().find("fun_param") != std::string::npos) {
+        if (tmp->getName().find("fun_param") != std::string::npos) {
             DEBUG_PRINT_3("This is an Argument");
             tmp = builder.CreateLoad(tmp);
-            var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, var_expression, "", bb_now);
+            var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, var_expression,
+                                                            "", bb_now);
         } else {
-            var_l = llvm::GetElementPtrInst::CreateInBounds(tmp, {CONST(0), var_expression}, "", bb_now);
+            var_l = llvm::GetElementPtrInst::CreateInBounds(
+                tmp, {CONST(0), var_expression}, "", bb_now);
             DEBUG_PRINT_3("Not an argument");
         }
     } else {
@@ -453,9 +456,9 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
 void CminusBuilder::visit(syntax_simple_expression &node) {
     // simple_expression -> additive relop additive | additive
     DEBUG_PRINT_2("visiting additive expression");
-        
-    llvm::Value* result;
-    if(node.additive_expression_r != nullptr) {
+
+    llvm::Value *result;
+    if (node.additive_expression_r != nullptr) {
         node.additive_expression_l->accept(*this);
         node.additive_expression_r->accept(*this);
 
@@ -463,27 +466,27 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
         auto l_expr = value_stack.pop();
 
         // compare
-        switch(node.op) {
-            case Op_lte:    // <=
-                result = builder.CreateICmpSLE(l_expr, r_expr);
-                break;
-            case Op_lt: // <
-                result = builder.CreateICmpSLT(l_expr, r_expr);
-                break;
-            case Op_gt: // >
-                result = builder.CreateICmpSGT(l_expr, r_expr);
-                break;
-            case Op_gte:    // >=
-                result = builder.CreateICmpSGE(l_expr, r_expr);
-                break;
-            case Op_eq: // ==
-                result = builder.CreateICmpEQ(l_expr, r_expr);
-                break;
-            case Op_neq:    // !=
-                result = builder.CreateICmpNE(l_expr, r_expr);
-                break;
-            default:
-                ERROR("wrong op, never here" << std::endl);
+        switch (node.op) {
+        case Op_lte: // <=
+            result = builder.CreateICmpSLE(l_expr, r_expr);
+            break;
+        case Op_lt: // <
+            result = builder.CreateICmpSLT(l_expr, r_expr);
+            break;
+        case Op_gt: // >
+            result = builder.CreateICmpSGT(l_expr, r_expr);
+            break;
+        case Op_gte: // >=
+            result = builder.CreateICmpSGE(l_expr, r_expr);
+            break;
+        case Op_eq: // ==
+            result = builder.CreateICmpEQ(l_expr, r_expr);
+            break;
+        case Op_neq: // !=
+            result = builder.CreateICmpNE(l_expr, r_expr);
+            break;
+        default:
+            ERROR("wrong op, never here" << std::endl);
             // no default available
         }
     } else {
@@ -500,15 +503,15 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
 void CminusBuilder::visit(syntax_additive_expression &node) {
     DEBUG_PRINT_2("visiting additive expression");
 
-    llvm::Value* result;
-    if(node.additive_expression != nullptr) {
+    llvm::Value *result;
+    if (node.additive_expression != nullptr) {
         node.additive_expression->accept(*this);
         auto add_expr = value_stack.pop();
 
         node.term->accept(*this);
         auto term = value_stack.pop();
 
-        if(node.op == Op_add) { // +
+        if (node.op == Op_add) { // +
             result = builder.CreateAdd(add_expr, term);
         } else {
             result = builder.CreateSub(add_expr, term);
@@ -529,9 +532,9 @@ void CminusBuilder::visit(syntax_term &node) {
     // term -> term mulop factor | factor
     DEBUG_PRINT_2("visiting term");
 
-    llvm::Value* result;
+    llvm::Value *result;
 
-    if(node.term == nullptr) {
+    if (node.term == nullptr) {
         node.factor->accept(*this);
         auto factor = value_stack.pop();
 
@@ -543,7 +546,7 @@ void CminusBuilder::visit(syntax_term &node) {
         node.term->accept(*this);
         auto term = value_stack.pop();
 
-        if(node.op == Op_mul) {
+        if (node.op == Op_mul) {
             result = builder.CreateMul(term, factor);
         } else {
             result = builder.CreateSDiv(term, factor);
@@ -559,9 +562,9 @@ void CminusBuilder::visit(syntax_call &node) {
     DEBUG_PRINT_2("visiting call");
 
     // setting args
-    std::vector<llvm::Value*> call_args;
+    std::vector<llvm::Value *> call_args;
 
-    for(auto iter : node.args) {
+    for (auto iter : node.args) {
         iter->accept(*this);
 
         call_args.push_back(value_stack.pop());
