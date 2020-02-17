@@ -14,7 +14,7 @@ The project is re-organised and re-written by bbn.
 - [ ] System V calling ABI
 - [ ] testcase
 - [ ] built-in functions
-- [ ] compile to exec
+- [x] compile to exec
 
 ## B. build
 
