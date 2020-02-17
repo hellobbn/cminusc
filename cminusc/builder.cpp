@@ -165,6 +165,8 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
     // this is important, create a ret if there is not one
     if(node.type == Type_int && bb_now->getTerminator() == nullptr) {
         builder.CreateRet(CONST(0));
+    } else if(node.type == Type_void && bb_now->getTerminator() == nullptr) {
+        builder.CreateRet(nullptr);
     }
 
     scope.exit();
@@ -361,7 +363,7 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
     } else {
         // FIXME: return void
         builder.CreateRet(
-            llvm::UndefValue::get(llvm::Type::getVoidTy(context)));
+            nullptr);
     }
 
     DEBUG_PRINT_2("leaving return stmt");
@@ -371,13 +373,18 @@ void CminusBuilder::visit(syntax_var &node) {
     // the var node gets the value of the variable
     DEBUG_PRINT_2("visiting var");
 
-    if(node.expression != nullptr) {
-        // id[ expression ], visit expression first
-        node.expression->accept(*this);
-        auto arr_expr = value_stack.pop();
+    auto val = scope.find(node.id);
 
-        // find the pointer related to id
-        auto val = scope.find(node.id);
+    if(val->getType()->isPointerTy()) {
+        // id[ expression ], visit expression first
+        DEBUG_PRINT("ARRAY!!!");
+        llvm::Value* arr_expr;
+        if(node.expression != nullptr) {
+            node.expression->accept(*this);
+            arr_expr = value_stack.pop();
+        } else {
+            arr_expr = CONST(0);
+        }
 
         // get element, is it a parameter or a local define ?
         llvm::Value* tmp;
@@ -389,13 +396,16 @@ void CminusBuilder::visit(syntax_var &node) {
             tmp = llvm::GetElementPtrInst::CreateInBounds(val, {CONST(0), arr_expr}, "", bb_now);
         }
 
-        result = builder.CreateLoad(tmp);
+        if(node.expression != nullptr) {
+            result = builder.CreateLoad(tmp);
+        } else {
+            result = tmp;
+        }
 
         // use stack to pass the value
         value_stack.push(result);
     } else {
         // the pointer, or the var only
-        auto val = scope.find(node.id);
         auto load_val = builder.CreateLoad(val);
         
         // check if it is array
