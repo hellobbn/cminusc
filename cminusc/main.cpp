@@ -156,7 +156,18 @@ int main(int argc, char **argv) {
     auto tree = syntax_tree(s);
 
     CminusBuilder builder;
+
+    DEBUG_PRINT_1("");
+    DEBUG_PRINT_1("-------------------------------------------------------");
+    DEBUG_PRINT_1("visiting the transformed tree.");
+    DEBUG_PRINT_1("-------------------------------------------------------");
+    DEBUG_PRINT_1("");
     tree.run_visitor(builder);
+    DEBUG_PRINT_1("");
+    DEBUG_PRINT_1("-------------------------------------------------------");
+    DEBUG_PRINT_1("Done visiting");
+    DEBUG_PRINT_1("-------------------------------------------------------");
+    DEBUG_PRINT_1("");
 
     auto mod = builder.build();
     mod->setSourceFileName(input_path);
@@ -253,6 +264,15 @@ int main(int argc, char **argv) {
         PM.run(*mod);
         obj_file->keep();
 
+        DEBUG_PRINT("object path for cminus-c library is set default to \"build/libcminusc.a\"");
+        std::string stdlib_dir = "build";
+        std::string stdlib_name = "libcminusc.a";
+        std::string stdlib = "cminus";
+        auto command = std::string("ld ") + output_path + ".o " + "-L build -l cminusc -o" + output_path;
+
+        DEBUG_PRINT("using command: " << command );
+
+        std::system(command.c_str());  
         // auto command_string =
         //     std::string("clang -w ") + output_path + ".o -o " + output_path;
         // std::system(command_string.c_str());
