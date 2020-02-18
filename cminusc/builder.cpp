@@ -374,7 +374,9 @@ void CminusBuilder::visit(syntax_var &node) {
 
     auto val = scope.find(node.id);
 
-    if (val->getType()->isPointerTy()) {
+    auto theType = val->getType()->getPointerElementType();
+
+    if (theType->isArrayTy() || theType->isPointerTy()) {
         // id[ expression ], visit expression first
         DEBUG_PRINT("ARRAY!!!");
         llvm::Value *arr_expr;
