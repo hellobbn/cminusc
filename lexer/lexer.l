@@ -249,6 +249,13 @@ identifierPattern [a-zA-Z][a-zA-Z]*
 #endif
 }
 
+["'"][" "-~]["'"] {
+#ifndef LEX_TEST
+    yylval.pnode = newSynTreeNode(yytext);
+#endif
+    return tok_a_char;
+}
+
 . {
     return tok_error;
 }

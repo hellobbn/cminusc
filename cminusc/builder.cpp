@@ -581,3 +581,7 @@ void CminusBuilder::visit(syntax_call &node) {
 
     DEBUG_PRINT_2("leaving call");
 }
+
+void CminusBuilder::visit(syntax_a_char &node) {
+    
+}

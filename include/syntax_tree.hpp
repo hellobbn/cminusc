@@ -65,6 +65,7 @@ struct syntax_simple_expression;
 struct syntax_additive_expression;
 struct syntax_term;
 struct syntax_call;
+struct syntax_a_char;
 
 // visitor class
 class syntax_tree_visitor;
@@ -204,6 +205,11 @@ struct syntax_call : syntax_factor {
     std::vector<std::shared_ptr<syntax_expression>> args;
 };
 
+struct syntax_a_char : syntax_factor {
+    virtual void accept(syntax_tree_visitor &) override final;
+    char value;
+};
+
 class syntax_tree_visitor {
   public:
     virtual void visit(syntax_program &) = 0;
@@ -222,6 +228,7 @@ class syntax_tree_visitor {
     virtual void visit(syntax_var &) = 0;
     virtual void visit(syntax_term &) = 0;
     virtual void visit(syntax_call &) = 0;
+    virtual void visit(syntax_a_char &) = 0;
 };
 
 // test function for syntax_tree
@@ -243,6 +250,7 @@ class syntax_tree_printer : public syntax_tree_visitor {
     virtual void visit(syntax_var &) override final;
     virtual void visit(syntax_term &) override final;
     virtual void visit(syntax_call &) override final;
+    virtual void visit(syntax_a_char &) override final;
     void add_depth(void) { depth += 1; }
     void remove_depth(void) { depth -= 1; }
 

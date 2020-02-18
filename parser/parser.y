@@ -37,7 +37,7 @@ struct syn_tree* syntax_tree;
 %token <pnode> tok_comma tok_l_parenthese tok_r_parenthese tok_l_bracket
 %token <pnode> tok_r_bracket tok_l_brace tok_r_brace tok_else tok_if tok_int tok_return
 %token <pnode> tok_void tok_while tok_identifier tok_number tok_array
-%token <pnode> tok_letter tok_eol tok_comment tok_blank tok_char
+%token <pnode> tok_letter tok_eol tok_comment tok_blank tok_char tok_a_char
 
 /* ************************************
  * Type definitions
@@ -430,6 +430,11 @@ factor: tok_l_parenthese expression tok_r_parenthese
         synTreeNodeAddChild($$, $1);
     }
     | tok_number
+    {
+        $$ = newSynTreeNode("factor");
+        synTreeNodeAddChild($$, $1);
+    }
+    | tok_a_char
     {
         $$ = newSynTreeNode("factor");
         synTreeNodeAddChild($$, $1);

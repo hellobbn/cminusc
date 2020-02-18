@@ -71,7 +71,7 @@ class CminusBuilder : public syntax_tree_visitor {
         // scope.enter();
         // scope.push("input", input_fun);
         // scope.push("output", output_fun);
-        scope.enter();  // go global
+        scope.enter(); // go global
     }
 
     std::unique_ptr<llvm::Module> build() { return std::move(module); }
@@ -93,6 +93,7 @@ class CminusBuilder : public syntax_tree_visitor {
     virtual void visit(syntax_var &) override final;
     virtual void visit(syntax_term &) override final;
     virtual void visit(syntax_call &) override final;
+    virtual void visit(syntax_a_char &) override final;
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;

@@ -72,14 +72,15 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         // var-declaration -> type-specifier `ID`; | type-specifier `ID` `[`
         // `NUM` `]`
         auto node = new syntax_var_declaration();
-        
-        if(STR_EQ(n->children[0]->children[0]->name, "int")) {
+
+        if (STR_EQ(n->children[0]->children[0]->name, "int")) {
             node->type = Type_int;
-        } else if(STR_EQ(n->children[0]->children[0]->name, "char")) {
+        } else if (STR_EQ(n->children[0]->children[0]->name, "char")) {
             node->type = Type_char;
             ERROR("CHAR!!!");
         } else {
-            ERROR("NO SUCH TYPE SPECIFIER " << n->children[0]->children[0]->name << std::endl);
+            ERROR("NO SUCH TYPE SPECIFIER " << n->children[0]->children[0]->name
+                                            << std::endl);
         }
 
         if (n->child_num == 3) { // int a;
@@ -143,9 +144,9 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         // param → type-specifier `ID` | type-specifier `ID` `[]`
         auto node = new syntax_param();
 
-        if(STR_EQ(n->children[0]->children[0]->name, "int")) {
+        if (STR_EQ(n->children[0]->children[0]->name, "int")) {
             node->type = Type_int;
-        } else if(STR_EQ(n->children[0]->children[0]->name, "char")) {
+        } else if (STR_EQ(n->children[0]->children[0]->name, "char")) {
             node->type = Type_char;
             ERROR("CHAR!!!");
         } else {
@@ -268,7 +269,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         return node;
     } else if (STR_EQ(n->name, "expression")) {
         // expression → var `=` expression | simple-expression
-        if (n->child_num == 1) {    // simple expression
+        if (n->child_num == 1) { // simple expression
             return transform_node_iter(n->children[0]);
         }
         auto node = new syntax_assign_expression();
@@ -397,7 +398,7 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
 
         return node;
     } else if (STR_EQ(n->name, "factor")) {
-        // factor → `(` expression `)` | var | call | `NUM`
+        // factor → `(` expression `)` | var | call | `NUM` | 'c'
         int i = 0;
         if (n->child_num == 3) {
             i = 1;
@@ -408,10 +409,16 @@ struct syntax_tree_node *syntax_tree::transform_node_iter(struct tree_node *n) {
         if (STR_EQ(name, "expression") || STR_EQ(name, "var") ||
             STR_EQ(name, "call")) {
             return transform_node_iter(n->children[i]);
-        } else {
+        } else if (name[0] != '\'') {
             auto num_node = new syntax_num();
             num_node->value = std::stoi(n->children[i]->name);
             return num_node;
+        } else {
+            auto a_char_node = new syntax_a_char();
+            a_char_node->value = name[1];
+            ERROR("CONVERTED: the char is: " << a_char_node->value);
+
+            return a_char_node;
         }
     } else if (STR_EQ(n->name, "call")) {
         // call → `ID` `(` args `)`
@@ -486,6 +493,9 @@ void syntax_additive_expression::accept(syntax_tree_visitor &visitor) {
 void syntax_var::accept(syntax_tree_visitor &visitor) { visitor.visit(*this); }
 void syntax_term::accept(syntax_tree_visitor &visitor) { visitor.visit(*this); }
 void syntax_call::accept(syntax_tree_visitor &visitor) { visitor.visit(*this); }
+void syntax_a_char::accept(syntax_tree_visitor &visitor) {
+    visitor.visit(*this);
+}
 
 void syntax_factor::accept(syntax_tree_visitor &visitor) {
     auto expr = dynamic_cast<syntax_expression *>(this);
@@ -509,6 +519,12 @@ void syntax_factor::accept(syntax_tree_visitor &visitor) {
     auto num = dynamic_cast<syntax_num *>(this);
     if (num) {
         num->accept(visitor);
+        return;
+    }
+
+    auto a_char = dynamic_cast<syntax_a_char *>(this);
+    if (a_char) {
+        a_char->accept(visitor);
         return;
     }
 
@@ -792,4 +808,9 @@ void syntax_tree_printer::visit(syntax_call &node) {
         arg->accept(*this);
     }
     remove_depth();
+}
+
+void syntax_tree_printer::visit(syntax_a_char &node) {
+    _DEBUG_PRINT_N_(depth);
+    std::cout << "num: " << node.value << std::endl;
 }
