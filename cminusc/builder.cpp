@@ -208,6 +208,8 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
         iter->accept(*this);
     }
 
+    scope.exit();
+
     DEBUG_PRINT_2("leaving compound stmt");
 }
 
@@ -457,7 +459,7 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
     // simple_expression -> additive relop additive | additive
-    DEBUG_PRINT_2("visiting additive expression");
+    DEBUG_PRINT_2("visiting simple expression");
 
     llvm::Value *result;
     if (node.additive_expression_r != nullptr) {
@@ -499,7 +501,7 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
 
     value_stack.push(result);
 
-    DEBUG_PRINT_2("leaving additive expression");
+    DEBUG_PRINT_2("leaving simple expression");
 }
 
 void CminusBuilder::visit(syntax_additive_expression &node) {
