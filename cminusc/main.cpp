@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
         std::string stdlib_dir = "build";
         std::string stdlib_name = "libcminusc.a";
         std::string stdlib = "cminus";
-        auto command = std::string("ld ") + output_path + ".o " + "-L build -l cminusc -o" + output_path;
+        auto command = std::string("ld ") + output_path + ".o " + "-L build -l cminusc -o " + output_path;
 
         DEBUG_PRINT("using command: " << command );
 
