@@ -28,13 +28,13 @@ int minloc ( int a[], int low, int high )
   }
  }
 
- void main(void)
+ int main(void)
  {  int i;
    i = 0;
    while ( i < 10)
-     {  x[i] = i;
-       /*i = i + 1;*/ }
+     {  x[i] = 10 - i;
+       i = i + 1; }
    sort(x, 0, 10);
    i = 0;
-
+   return x[2];
  }
