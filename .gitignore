@@ -1,3 +1,5 @@
 build/
 testout/
 .vscode/
+*.o
+*.ll
