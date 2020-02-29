@@ -52,6 +52,7 @@ struct syn_tree* syn_parser(const char* input_file_name) {
 
     yyparse();  // this operation constructs a syntax tree
 
+    DEBUG_PRINT("Parser ended for %s\n", input_file_name);
 
     fclose(yyin);
 

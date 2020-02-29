@@ -35,7 +35,7 @@ ValStack value_stack;
 #define ArrayType(num) llvm::ArrayType::get(TyInt32, num)
 
 void CminusBuilder::visit(syntax_program &node) {
-    DEBUG_PRINT_2("visiting program");
+    DEBUG_PRINT_3("visiting program");
 
     is_main = 0;
 
@@ -43,20 +43,20 @@ void CminusBuilder::visit(syntax_program &node) {
         iter->accept(*this);
     }
 
-    DEBUG_PRINT_2("leaving program");
+    DEBUG_PRINT_3("leaving program");
 }
 
 void CminusBuilder::visit(syntax_num &node) {
-    DEBUG_PRINT_2("visiting num");
+    DEBUG_PRINT_3("visiting num");
 
     value_stack.push(
         llvm::ConstantInt::get(tInt32, llvm::APInt(32, node.value)));
 
-    DEBUG_PRINT_2("leaving num");
+    DEBUG_PRINT_3("leaving num");
 }
 
 void CminusBuilder::visit(syntax_var_declaration &node) {
-    DEBUG_PRINT_2("visiting var declaration");
+    DEBUG_PRINT_3("visiting var declaration");
 
     if (node.array_def) {
         // visiting the `num` in array definition is not needed
@@ -106,11 +106,11 @@ void CminusBuilder::visit(syntax_var_declaration &node) {
         }
     }
 
-    DEBUG_PRINT("leaving var declaration");
+    DEBUG_PRINT_3("leaving var declaration");
 }
 
 void CminusBuilder::visit(syntax_fun_declaration &node) {
-    DEBUG_PRINT_2("visiting fun declaration");
+    DEBUG_PRINT_3("visiting fun declaration");
 
     // param list
     size_t param_size = node.params.size(); // number of params
@@ -171,11 +171,11 @@ void CminusBuilder::visit(syntax_fun_declaration &node) {
 
     scope.exit();
 
-    DEBUG_PRINT_2("leaving fun declaration");
+    DEBUG_PRINT_3("leaving fun declaration");
 }
 
 void CminusBuilder::visit(syntax_param &node) {
-    DEBUG_PRINT_2("visiting param");
+    DEBUG_PRINT_3("visiting param");
 
     static int name_num = 0;
     name_num++;
@@ -192,11 +192,11 @@ void CminusBuilder::visit(syntax_param &node) {
 
     scope.push(node.id, theParam);
 
-    DEBUG_PRINT_2("leaving param");
+    DEBUG_PRINT_3("leaving param");
 }
 
 void CminusBuilder::visit(syntax_compound_stmt &node) {
-    DEBUG_PRINT_2("visiting compound stmt");
+    DEBUG_PRINT_3("visiting compound stmt");
 
     scope.enter();
 
@@ -210,23 +210,23 @@ void CminusBuilder::visit(syntax_compound_stmt &node) {
 
     scope.exit();
 
-    DEBUG_PRINT_2("leaving compound stmt");
+    DEBUG_PRINT_3("leaving compound stmt");
 }
 
 void CminusBuilder::visit(syntax_expression_stmt &node) {
-    DEBUG_PRINT_2("visiting expression stmt");
+    DEBUG_PRINT_3("visiting expression stmt");
 
     if (node.expression != nullptr) {
         node.expression->accept(*this);
     }
 
-    DEBUG_PRINT_2("leaving expression stmt");
+    DEBUG_PRINT_3("leaving expression stmt");
 }
 
 void CminusBuilder::visit(syntax_selection_stmt &node) {
     // selection_stmt -> if ( expression ) statement | if ( expression )
     // statement else statement
-    DEBUG_PRINT_2("visiting selection stmt");
+    DEBUG_PRINT_3("visiting selection stmt");
 
     int all_ret = 0; // this checks terminator status
     static int selection_cnt =
@@ -304,12 +304,12 @@ void CminusBuilder::visit(syntax_selection_stmt &node) {
         }
     }
 
-    DEBUG_PRINT_2("leaving selection stmt");
+    DEBUG_PRINT_3("leaving selection stmt");
 }
 
 void CminusBuilder::visit(syntax_iteration_stmt &node) {
     // iteration_stmt -> while ( expression ) statement
-    DEBUG_PRINT_2("visiting iteration stmt");
+    DEBUG_PRINT_3("visiting iteration stmt");
 
     static int while_cnt =
         0; // increase it each time a iteration_stmt is visited
@@ -352,12 +352,12 @@ void CminusBuilder::visit(syntax_iteration_stmt &node) {
         bb_now = while_out_bb;
     }
 
-    DEBUG_PRINT_2("leaving iteration stmt");
+    DEBUG_PRINT_3("leaving iteration stmt");
 }
 
 void CminusBuilder::visit(syntax_return_stmt &node) {
     // return_stmt -> return; | return expression;
-    DEBUG_PRINT_2("visiting return stmt");
+    DEBUG_PRINT_3("visiting return stmt");
 
     if (node.expression != nullptr) {
         node.expression->accept(*this);
@@ -367,12 +367,12 @@ void CminusBuilder::visit(syntax_return_stmt &node) {
         builder.CreateRet(nullptr);
     }
 
-    DEBUG_PRINT_2("leaving return stmt");
+    DEBUG_PRINT_3("leaving return stmt");
 }
 
 void CminusBuilder::visit(syntax_var &node) {
     // the var node gets the value of the variable
-    DEBUG_PRINT_2("visiting var");
+    DEBUG_PRINT_3("visiting var");
 
     auto val = scope.find(node.id);
 
@@ -380,7 +380,7 @@ void CminusBuilder::visit(syntax_var &node) {
 
     if (theType->isArrayTy() || theType->isPointerTy()) {
         // id[ expression ], visit expression first
-        DEBUG_PRINT("ARRAY!!!");
+        DEBUG_PRINT_3("ARRAY!!!");
         llvm::Value *arr_expr;
         if (node.expression != nullptr) {
             node.expression->accept(*this);
@@ -417,11 +417,11 @@ void CminusBuilder::visit(syntax_var &node) {
         value_stack.push(load_val); // FIXME: may be wrong, may be right.
     }
 
-    DEBUG_PRINT_2("leaving var");
+    DEBUG_PRINT_3("leaving var");
 }
 
 void CminusBuilder::visit(syntax_assign_expression &node) {
-    DEBUG_PRINT_2("visiting assign expression");
+    DEBUG_PRINT_3("visiting assign expression");
 
     // var = expression
     node.expression->accept(*this);
@@ -454,12 +454,12 @@ void CminusBuilder::visit(syntax_assign_expression &node) {
     // store
     builder.CreateStore(assign_expr_r, var_l);
 
-    DEBUG_PRINT_2("leaving assign expression");
+    DEBUG_PRINT_3("leaving assign expression");
 }
 
 void CminusBuilder::visit(syntax_simple_expression &node) {
     // simple_expression -> additive relop additive | additive
-    DEBUG_PRINT_2("visiting simple expression");
+    DEBUG_PRINT_3("visiting simple expression");
 
     llvm::Value *result;
     if (node.additive_expression_r != nullptr) {
@@ -501,11 +501,11 @@ void CminusBuilder::visit(syntax_simple_expression &node) {
 
     value_stack.push(result);
 
-    DEBUG_PRINT_2("leaving simple expression");
+    DEBUG_PRINT_3("leaving simple expression");
 }
 
 void CminusBuilder::visit(syntax_additive_expression &node) {
-    DEBUG_PRINT_2("visiting additive expression");
+    DEBUG_PRINT_3("visiting additive expression");
 
     llvm::Value *result;
     if (node.additive_expression != nullptr) {
@@ -529,12 +529,12 @@ void CminusBuilder::visit(syntax_additive_expression &node) {
 
     value_stack.push(result);
 
-    DEBUG_PRINT_2("leaving additive expression");
+    DEBUG_PRINT_3("leaving additive expression");
 }
 
 void CminusBuilder::visit(syntax_term &node) {
     // term -> term mulop factor | factor
-    DEBUG_PRINT_2("visiting term");
+    DEBUG_PRINT_3("visiting term");
 
     llvm::Value *result;
 
@@ -559,11 +559,11 @@ void CminusBuilder::visit(syntax_term &node) {
 
     value_stack.push(result);
 
-    DEBUG_PRINT_2("leaving term");
+    DEBUG_PRINT_3("leaving term");
 }
 
 void CminusBuilder::visit(syntax_call &node) {
-    DEBUG_PRINT_2("visiting call");
+    DEBUG_PRINT_3("visiting call");
 
     // setting args
     std::vector<llvm::Value *> call_args;
@@ -583,7 +583,7 @@ void CminusBuilder::visit(syntax_call &node) {
     // pass value through stack
     value_stack.push(call_ret);
 
-    DEBUG_PRINT_2("leaving call");
+    DEBUG_PRINT_3("leaving call");
 }
 
 void CminusBuilder::visit(syntax_a_char &node) {
