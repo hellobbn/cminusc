@@ -21,6 +21,8 @@ void syntax_tree::run_visitor(syntax_tree_visitor &visitor) {
     root->accept(visitor);
 }
 
+syntax_tree_node::~syntax_tree_node() {};
+
 /** syntax_tree:
  *  construct a syntax tree class from a given C syn_tree
  *  using the function: transform_node_iter().

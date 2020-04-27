@@ -88,6 +88,7 @@ class syntax_tree {
 
 struct syntax_tree_node {
     virtual void accept(syntax_tree_visitor &) = 0;
+    virtual ~syntax_tree_node() = 0;
 };
 
 struct syntax_program : syntax_tree_node {

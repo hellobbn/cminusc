@@ -5,12 +5,12 @@
 # -----------------------------------------------------------------------------
 
 ## generic
-CC 				= gcc
-CXX				= g++
+CC 				= clang
+CXX				= clang++
 AR				= ar
 ASM 			= nasm
 C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
-C_FLAG 		   += -Wno-unused-function
+C_FLAG 		   += -Wno-unused-function -g
 CXX_FLAG		= ${C_FLAG}
 CXX_LINKFLAG	= -l LLVM ${CXX_FLAG} 
 ASM_FLAG		= -felf64

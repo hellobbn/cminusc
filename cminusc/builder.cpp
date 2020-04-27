@@ -575,10 +575,11 @@ void CminusBuilder::visit(syntax_call &node) {
     }
 
     // find function
-    auto theFunc = scope.find(node.id);
+    auto func_value = scope.find(node.id);
+    auto ac_func = llvm::dyn_cast<llvm::Function>(func_value);
 
     // call
-    auto call_ret = builder.CreateCall(theFunc, call_args);
+    auto call_ret = builder.CreateCall(llvm::FunctionCallee(ac_func), call_args);
 
     // pass value through stack
     value_stack.push(call_ret);

@@ -9,7 +9,7 @@
 #undef DEBUG
 #endif
 
-#define DEBUG 2
+#define DEBUG 3
 
 #ifdef DEBUG_PRINT
 #undef DEBUG_PRINT

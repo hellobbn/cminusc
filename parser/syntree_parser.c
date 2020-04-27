@@ -26,7 +26,7 @@ extern int lines;
 extern char* yytext;
 
 // local global value
-struct syn_tree* syntax_tree;
+extern struct syn_tree* syntax_tree;
 
 /** syn_parser():
  *  parser generater for the compiler
