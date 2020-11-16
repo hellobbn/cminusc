@@ -12,7 +12,7 @@ ASM 			= nasm
 C_FLAG 			= -Iinclude  -Ibuild/generated -Wall -Wextra -Wno-unused-parameter
 C_FLAG 		   += -Wno-unused-function
 CXX_FLAG		= ${C_FLAG}
-CXX_LINKFLAG	= -l LLVM ${CXX_FLAG} 
+CXX_LINKFLAG	= -l LLVM ${CXX_FLAG} -fuse-ld=lld 
 ASM_FLAG		= -felf64
 
 ## build dir
