@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "parser.tab.h"
+
 #include "helper.h"
 #include "syntax_tree.h"
 
